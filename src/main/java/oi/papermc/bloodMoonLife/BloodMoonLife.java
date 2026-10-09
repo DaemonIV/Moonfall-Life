@@ -74,7 +74,7 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
 
                 b = r.nextInt(10);
                 b = 9;
-
+                a = 1;
                 while (b == 9 && countDemocracyPlayers() > 2) {
                     b = r.nextInt(10);
 
