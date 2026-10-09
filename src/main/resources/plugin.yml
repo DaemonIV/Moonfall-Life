@@ -1,0 +1,12 @@
+name: BloodMoonLife
+version: '${version}'
+
+main: oi.papermc.bloodMoonLife.BloodMoonLife
+api-version: '26.1.2'
+load: POSTWORLD
+
+authors: [ Bloody_daemonIV ]
+
+commands:
+  vote:
+    usage: /vote <player>

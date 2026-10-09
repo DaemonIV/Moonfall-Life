@@ -1,0 +1,13 @@
+name: BloodMoonLife
+version: '1.0'
+
+main: oi.papermc.bloodMoonLife.BloodMoonLife
+api-version: '26.1.2'
+load: POSTWORLD
+
+authors: [ Bloody_daemonIV ]
+
+commands:
+  supplydrop:
+    usage: /supplydrop
+    permission: op
