@@ -8,6 +8,7 @@ load: POSTWORLD
 authors: [ Bloody_daemonIV ]
 
 commands:
-  supplydrop:
-    usage: /supplydrop
-    permission: op
+  vote:
+    usage: /vote <player>
+  hire:
+    usage: /hire <player>

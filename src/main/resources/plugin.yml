@@ -10,3 +10,5 @@ authors: [ Bloody_daemonIV ]
 commands:
   vote:
     usage: /vote <player>
+  hire:
+    usage: /hire <player>

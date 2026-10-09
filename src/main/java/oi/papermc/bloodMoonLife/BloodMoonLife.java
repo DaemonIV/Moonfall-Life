@@ -56,9 +56,21 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
             long time = world.getTime();
 
             if (time >= 13000 && !hasAnnouncedNight) {
+                if (electionActive) {
+                    electionActive = false;
+                    Bukkit.broadcastMessage("§aThe president survived the night!");
+                    tell(presidentId, "§6You survived! Here is your reward.");
+                    Bukkit.broadcastMessage("Insert president reward here");
+                    // reward
+
+                    if (assassinId != null) {
+                        String aName = Bukkit.getOfflinePlayer(assassinId).getName();
+                        if (aName != null && !isRed(aName)) loseLife(aName);
+                    }
+                }
                 hasAnnouncedNight = true;
                 Random r = new Random();
-                a = r.nextInt(2);
+                //a = r.nextInt(2);
 
                 b = r.nextInt(10);
                 b = 9;
@@ -639,15 +651,70 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
                     }.runTaskTimer(plugin, 0L, r.nextInt(51) + 20);
                     return;
                 } else if (b == 9) {
+                    votedFor.clear();
+                    voteCounts.clear();
                     if (a == 0) {
                         this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a times 20 140 40");
                         this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83e\\ude78 The Blood Democratic moon has risen! \\ud83e\\ude78\",\"color\":\"dark_blue\"}");
                         return;
                     }
-                    this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a times 20 140 40");
-                    this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83e\\ude78 The Democratic moon has risen! \\ud83e\\ude78\",\"color\":\"dark_blue\"}");
+
+                    //this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a times 20 140 40");
+                    //this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83e\\ude78 The Democratic moon has risen! \\ud83e\\ude78\",\"color\":\"dark_blue\"}");
+                    Bukkit.broadcastMessage("§6Voting closes in 1 minute!");
+                    Bukkit.getScheduler().runTaskLater(this, () -> {
+                        UUID winner = null;
+                        int best = 0;
+                        for (Map.Entry<UUID, Integer> e : voteCounts.entrySet()) {
+                            if (e.getValue() > best) {
+                                best = e.getValue();
+                                winner = e.getKey();
+                            }
+                        }
+                        if (winner != null) {
+                            Bukkit.broadcastMessage("§6And the winner is...");
+                            presidentId = winner;
+                            int finalBest = best;
+                            Bukkit.getScheduler().runTaskLater(this, () -> {
+                                Bukkit.broadcastMessage("§6" + Bukkit.getOfflinePlayer(presidentId).getName() + " won with " + finalBest + " votes!");
+                            }, 60L);
+                        }
+
+                        if (presidentId != null) {
+                            Player president = Bukkit.getPlayer(presidentId);
+                            if (president != null) {
+                                president.sendMessage("§6Welcome President! You now have 1 minute to decide 2 non-reds to be your bodyguards (/hire). Failure to do so will result in the loss of your life. Once they are picked, a random player will become an assassin. This player will have the task to kill you. If they kill you, you lose that life and your bodyguards will also each lose a life if they didn't die. If you survive the night, you shall gain rewards and the assassin shall lose a life. Good luck President.");
+                            }
+                        }
+                        electionActive = true;
+
+// 1 minute (1200 ticks) later: check bodyguards, then pick the assassin
+                        Bukkit.getScheduler().runTaskLater(this, () -> {
+                            Player president = Bukkit.getPlayer(presidentId);
+
+                            if (bodyguards.size() < 2) {
+                                loseLife(Bukkit.getOfflinePlayer(presidentId).getName());
+                                Bukkit.broadcastMessage("§cThe president failed to hire 2 bodyguards and loses a life!");
+                            }
+
+                            List<Player> candidates = new ArrayList<>();
+                            for (Player p : Bukkit.getOnlinePlayers()) {
+                                if (p.getUniqueId().equals(presidentId)) continue;
+                                if (bodyguards.contains(p.getUniqueId())) continue;
+                                if (p.getGameMode() == GameMode.SPECTATOR) continue;
+                                candidates.add(p);
+                            }
+                            if (!candidates.isEmpty()) {
+                                Player assassin = candidates.get(new Random().nextInt(candidates.size()));
+                                assassinId = assassin.getUniqueId();
+                                assassin.sendMessage("§4You are the ASSASSIN. Kill the president before morning!");
+                            }
+                            tell(presidentId, "§6Your bodyguards are set. An assassin has been chosen. Survive until morning!");
+                        }, 1200L);
 
 
+
+                    }, 1100L);
                     return;
                 }
 
@@ -700,36 +767,88 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
 
 
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!command.getName().equalsIgnoreCase("vote")) return false;
-        World world = Bukkit.getWorlds().get(0);
-        long time = world.getTime();
-        if (b != 9 && time >= 13000 && time <= 14000) {
-
-        }
-
-        if (args.length == 0) {
-            sender.sendMessage("§cUsage: /vote <player>");
-            return true;
-        }
-
-        if (args.length != 0) {
-            Scoreboard board = Bukkit.getScoreboardManager().getMainScoreboard();
-
-
-            for (Player player : Bukkit.getOnlinePlayers()) {
-                Team team = board.getEntryTeam(player.getName());
-                if (team == null) continue;
-
-                String name = team.getName();
-                if (name.equals("DG6") || name.equals("DG5") || name.equals("DG4")
-                        || name.equals("G") || name.equals("Y")) {
-
-                }
+        if (command.getName().equalsIgnoreCase("vote")) {
+            World world = Bukkit.getWorlds().get(0);
+            long time = world.getTime();
+            if (b != 9 && time >= 13000 && time <= 14200) {
+                sender.sendMessage("§cThe Ballot is closed!");
+                return true;
             }
+
+            if (!(sender instanceof Player voter)) {
+                sender.sendMessage("Only players can vote.");
+                return true;
+            }
+
+            if (args.length != 1) {
+                sender.sendMessage("§cUsage: /vote <player>");
+                return true;
+            }
+
+            if (votedFor.containsKey(voter.getUniqueId())) {
+                sender.sendMessage("§cYou have already voted!");
+                return true;
+            }
+
+            Player target = Bukkit.getPlayerExact(args[0]);
+            if (target == null) {
+                sender.sendMessage("§cThat player is not online.");
+                return true;
+            }
+            if (target.equals(voter)) {
+                sender.sendMessage("§cYou are not able to vote for yourself!");
+                return true;
+            }
+            if (!canBePresident(target)) {
+                sender.sendMessage("§c" + target.getName() + " cannot be president.");
+                return true;
+            }
+
+            votedFor.put(voter.getUniqueId(), target.getUniqueId());
+            voteCounts.merge(target.getUniqueId(), 1, Integer::sum);
+            sender.sendMessage("§aVote counted for " + target.getName());
             return true;
         }
-        sender.sendMessage("§cUnknown subcommand.");
-        return true;
+        if (command.getName().equalsIgnoreCase("hire")) {
+            if (!(sender instanceof Player p) || presidentId == null || !p.getUniqueId().equals(presidentId)) {
+                sender.sendMessage("§cOnly the president can hire bodyguards.");
+                return true;
+            }
+            long time = Bukkit.getWorlds().get(0).getTime();
+            if (time < 14100 || time > 15400) {
+                sender.sendMessage("§cYou cannot hire at this time");
+                return true;
+            }
+            if (args.length != 1) {
+                sender.sendMessage("§cUsage: /hire <player>");
+                return true;
+            }
+            if (bodyguards.size() >= 2) {
+                sender.sendMessage("§cYou already have 2 bodyguards.");
+                return true;
+            }
+            Player target = Bukkit.getPlayerExact(args[0]);
+            if (target == null) {
+                sender.sendMessage("§cThat player is not online.");
+                return true;
+            }
+            if (target.equals(p)) {
+                sender.sendMessage("§cYou are not able to become your own bodyguard.");
+                return true;
+            }
+            if (!canBePresident(target)) {   // non-red, on a team
+                sender.sendMessage("§c" + target.getName() + " cannot be a bodyguard.");
+                return true;
+            }
+            if (!bodyguards.add(target.getUniqueId())) {
+                sender.sendMessage("§cThey are already your bodyguard.");
+                return true;
+            }
+            sender.sendMessage("§a" + target.getName() + " is now your bodyguard (" + bodyguards.size() + "/2).");
+            target.sendMessage("§6You are now the president's bodyguard. Keep them alive until morning!");
+            return true;
+        }
+    return true;
     }
     @Override
     public void onDisable() {
@@ -782,6 +901,58 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
         return count;
     }
 
+    private boolean canBePresident(Player p) {
+        Team team = Bukkit.getScoreboardManager().getMainScoreboard().getEntryTeam(p.getName());
+        if (team == null) return false;
+        String name = team.getName();
+        return name.equals("DG6") || name.equals("DG5") || name.equals("DG4")
+                || name.equals("G") || name.equals("Y");
+    }
+
+    private boolean isRed(String playerName) {
+        Team t = Bukkit.getScoreboardManager().getMainScoreboard().getEntryTeam(playerName);
+        return t != null && t.getName().equals("R");
+    }
+
+
+    private void loseLife(String playerName) {
+        Team t = Bukkit.getScoreboardManager().getMainScoreboard().getEntryTeam(playerName);
+        if (t == null) return;
+        String next = switch (t.getName()) {
+            case "DG6" -> "DG5";
+            case "DG5" -> "DG4";
+            case "DG4" -> "G";
+            case "G" -> "Y";
+            case "Y" -> "R";
+            default -> null;   // R (or unknown) -> out of the game
+        };
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "team leave " + playerName);
+        if (next != null) {
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "team join " + next + " " + playerName);
+        } else if (t.getName().equals("R")) {
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "gamemode spectator " + playerName);
+        }
+    }
+
+    private void tell(UUID id, String msg) {
+        Player p = id == null ? null : Bukkit.getPlayer(id);
+        if (p != null) p.sendMessage(msg);
+    }
+
+    private final Map<UUID, UUID> votedFor = new HashMap<>();
+
+    private final Map<UUID, Integer> voteCounts = new HashMap<>();
+
+    private UUID presidentId = null;
+
+    private final Set<UUID> bodyguards = new LinkedHashSet<>();
+
+    private final Set<UUID> diedTonight = new HashSet<>();
+
+    private UUID assassinId = null;
+
+    private boolean electionActive = false;
+
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) throws InterruptedException {
         Player player = event.getEntity();
@@ -821,5 +992,25 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
                 this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"" + player.getName() + "\",\"color\":\"red\"}");
             }
         }
+        if (electionActive) {
+            diedTonight.add(player.getUniqueId());
+
+            if (player.getUniqueId().equals(presidentId)) {
+                // president died: bodyguards who are still alive lose a life (unless red)
+                for (UUID id : bodyguards) {
+                    if (diedTonight.contains(id)) continue;
+                    String name = Bukkit.getOfflinePlayer(id).getName();
+                    if (name != null && !isRed(name)) loseLife(name);
+                }
+                Player killer = player.getKiller();
+                if (killer != null && killer.getUniqueId().equals(assassinId)) {
+                    Bukkit.broadcastMessage("§4The assassin has killed the president!");
+                    Bukkit.broadcastMessage("Insert ass reward here");
+                    // TODO: assassin reward
+                }
+                electionActive = false;   // resolved, so morning doesn't resolve it again
+            }
+        }
     }
+
 }
