@@ -1005,8 +1005,15 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
                 Player killer = player.getKiller();
                 if (killer != null && killer.getUniqueId().equals(assassinId)) {
                     Bukkit.broadcastMessage("§4The assassin has killed the president!");
-                    Bukkit.broadcastMessage("Insert ass reward here");
-                    // TODO: assassin reward
+                    Location loc = killer.getLocation();
+                    Bukkit.getScheduler().runTaskLater(this, () -> {
+                        killer.sendMessage("§4Congradulations! Here is your reward.");
+                    }, 40L);
+                    // We do something like you get 4 rewards. Food, Blocks, Materials, Misilanious.
+                    // Food would be steak, apples, bread, golden carrots, pork chops, fish ect
+                    // Blocks would be wood, obi, crying obi, dirt, leaves, deepslate, tnt
+                    // Materials would be iron, gold, emeralds, diamonds, netherite, redstone
+                    // Misilanious would be tridents, spawn eggs, books, tnt minecart, enchanting table
                 }
                 electionActive = false;   // resolved, so morning doesn't resolve it again
             }
