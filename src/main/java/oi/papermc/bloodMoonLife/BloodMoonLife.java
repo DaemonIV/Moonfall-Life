@@ -985,14 +985,92 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
     }
 
     private void giveAssassinReward(Player assassin) {
+        Random r = new Random();
         if (assassinRewarded) return;   // never reward twice
         assassinRewarded = true;
 
-        assassin.sendMessage("§6You have been rewarded for your work as the assassin!");
+
         Bukkit.broadcastMessage("§4The Assassin has killed the president!");
-        // TODO: your reward here, e.g.
-        // Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "give " + assassin.getName() + " minecraft:diamond 16");
+        Bukkit.getScheduler().runTaskLater(this, () -> {
+            assassin.sendMessage("§6Congratulations! Here is your reward assassin.");
+        }, 60L);
+        // Food
+
+        Bukkit.getScheduler().runTaskLater(this, () -> {
+
+            int f = r.nextInt(5);
+            if (f == 0) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:bread\",count:32}}");
+            } else if (f == 1) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:cooked_beef\",count:28}}");
+            } else if (f == 2) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:golden_carrot\",count:20}}");
+            } else if (f == 3) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:golden_apple\",count:8}}");
+            } else if (f == 4) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:apple\",count:16}}");
+            }
+        }, 40L);
+
+        // Blocks
+        Bukkit.getScheduler().runTaskLater(this, () -> {
+
+            int f = r.nextInt(5);
+            if (f == 0) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:cobbled_deepslate\",count:48}}");
+            } else if (f == 1) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:oak_log\",count:38}}");
+            } else if (f == 2) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:obsidian\",count:20}}");
+            } else if (f == 3) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:sand\",count:16}}");
+            } else if (f == 4) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:blue_ice\",count:16}}");
+            }
+        }, 40L);
+
+        // Materials
+
+        Bukkit.getScheduler().runTaskLater(this, () -> {
+
+            int f = r.nextInt(6);
+            if (f == 0) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:emerald\",count:32}}");
+            } else if (f == 1) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:iron_ingot\",count:28}}");
+            } else if (f == 2) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:diamond\",count:16}}");
+            } else if (f == 3) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:netherite_upgrade_smithing_template\",count:1}}");
+            } else if (f == 4) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:netherite_ingot\",count:1}}");
+            } else if (f == 5) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"redstone\",count:48}}");
+            }
+        }, 40L);
+
+        // extras
+
+        Bukkit.getScheduler().runTaskLater(this, () -> {
+
+            int f = r.nextInt(6);
+            if (f == 0) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:trident\",count:1}}");
+            } else if (f == 1) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:ender_pearl\",count:8}}");
+            } else if (f == 2) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:breeze_rod\",count:12}}");
+            } else if (f == 3) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:tnt_minecart\",count:1}}");
+            } else if (f == 4) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:netherite_ingot\",count:1}}");
+            } else if (f == 5) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"redstone\",count:48}}");
+            }
+        }, 40L);
     }
+
+
 
     private void tell(UUID id, String msg) {
         Player p = id == null ? null : Bukkit.getPlayer(id);
@@ -1078,7 +1156,7 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
                 Player killer = player.getKiller();
                 if (killer != null && killer.getUniqueId().equals(assassinId)) {
                     Bukkit.broadcastMessage("§4The assassin has killed the president!");
-                    Bukkit.broadcastMessage("Insert ass reward here");
+
                     giveAssassinReward(killer);
                 }
                 electionActive = false;   // resolved, so morning doesn't resolve it again
