@@ -1053,7 +1053,7 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
 
         Bukkit.getScheduler().runTaskLater(this, () -> {
 
-            int f = r.nextInt(6);
+            int f = r.nextInt(10);
             if (f == 0) {
                 Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:trident\",count:1}}");
             } else if (f == 1) {
@@ -1063,9 +1063,17 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
             } else if (f == 3) {
                 Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:tnt_minecart\",count:1}}");
             } else if (f == 4) {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:netherite_ingot\",count:1}}");
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:silence_armor_trim_smithing_template\",count:1}}");
             } else if (f == 5) {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"redstone\",count:48}}");
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"creeper_spawn_egg\",count:8}}");
+            }  else if (f == 6) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"bogged_spawn_egg\",count:12}}");
+            }  else if (f == 7) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"wither_skeleton_skull\",count:1}}");
+            }  else if (f == 8) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"experience_bottle\",count:28}}");
+            }  else if (f == 9) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"ominous_trial_key\",count:1}}");
             }
         }, 40L);
     }
