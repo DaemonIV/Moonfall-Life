@@ -44,6 +44,7 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
     private int a = 0;
     private int b = 0;
     private final Set<UUID> handledPlayers = new HashSet<>();
+    private boolean assassinRewarded = false;
 
     @Override
     public void onEnable() {
@@ -56,18 +57,7 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
             long time = world.getTime();
 
             if (time >= 13000 && !hasAnnouncedNight) {
-                if (electionActive) {
-                    electionActive = false;
-                    Bukkit.broadcastMessage("§aThe president survived the night!");
-                    tell(presidentId, "§6You survived! Here is your reward.");
-                    Bukkit.broadcastMessage("Insert president reward here");
-                    // reward
 
-                    if (assassinId != null) {
-                        String aName = Bukkit.getOfflinePlayer(assassinId).getName();
-                        if (aName != null && !isRed(aName)) loseLife(aName);
-                    }
-                }
                 hasAnnouncedNight = true;
                 Random r = new Random();
                 //a = r.nextInt(2);
@@ -75,10 +65,11 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
                 b = r.nextInt(10);
                 b = 9;
                 a = 1;
-                while (b == 9 && countDemocracyPlayers() > 2) {
-                    b = r.nextInt(10);
+                //
+                //while (b == 9 && countDemocracyPlayers() > 2) {
+                //    b = r.nextInt(10);
 
-                }
+                //}
 
 
 
@@ -653,14 +644,15 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
                 } else if (b == 9) {
                     votedFor.clear();
                     voteCounts.clear();
+                    assassinRewarded = false;
                     if (a == 0) {
                         this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a times 20 140 40");
                         this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83e\\ude78 The Blood Democratic moon has risen! \\ud83e\\ude78\",\"color\":\"dark_blue\"}");
                         return;
                     }
 
-                    //this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a times 20 140 40");
-                    //this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83e\\ude78 The Democratic moon has risen! \\ud83e\\ude78\",\"color\":\"dark_blue\"}");
+                    this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a times 20 140 40");
+                    this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83e\\ude78 The Democratic moon has risen! \\ud83e\\ude78\",\"color\":\"dark_blue\"}");
                     Bukkit.broadcastMessage("§6Voting closes in 1 minute!");
                     Bukkit.getScheduler().runTaskLater(this, () -> {
                         UUID winner = null;
@@ -727,6 +719,23 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
 
             if (time < 13000 && hasAnnouncedNight) {
                 hasAnnouncedNight = false;
+                if (electionActive) {
+                    electionActive = false;
+                    Bukkit.broadcastMessage("§aThe president survived the night!");
+                    tell(presidentId, "§6You survived! Here is your reward.");
+                    Bukkit.broadcastMessage("Insert president reward here");
+                    // reward
+
+                    if (assassinId != null) {
+                        String aName = Bukkit.getOfflinePlayer(assassinId).getName();
+                        if (aName != null && !isRed(aName)) loseLife(aName);
+                    }
+                }
+
+                if (assassinId != null && !assassinRewarded) {
+                    String aName = Bukkit.getOfflinePlayer(assassinId).getName();
+                    if (aName != null && !isRed(aName)) loseLife(aName);
+                }
 
                 world.setMonsterSpawnLimit(70);
                 world.setTicksPerMonsterSpawns(1);
@@ -848,6 +857,47 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
             target.sendMessage("§6You are now the president's bodyguard. Keep them alive until morning!");
             return true;
         }
+        if (command.getName().equalsIgnoreCase("assassinreward")) {
+            if (assassinId == null) {
+                sender.sendMessage("§cThere is no assassin right now.");
+                return true;
+            }
+            if (assassinRewarded) {
+                sender.sendMessage("§cThe assassin has already been rewarded.");
+                return true;
+            }
+            Player assassin = Bukkit.getPlayer(assassinId);
+            if (assassin == null) {
+                sender.sendMessage("§cThe assassin is not online.");
+                return true;
+            }
+            giveAssassinReward(assassin);
+            sender.sendMessage("§aRewarded " + assassin.getName() + " and protected them from losing a life.");
+            return true;
+        }
+        if (command.getName().equalsIgnoreCase("election")) {
+            if (presidentId == null) {
+                sender.sendMessage("§cThere is no president right now.");
+                return true;
+            }
+
+            sender.sendMessage("§6--- Election Status ---");
+            sender.sendMessage("§ePresident: §f" + nameOf(presidentId) + statusOf(presidentId));
+
+            if (bodyguards.isEmpty()) {
+                sender.sendMessage("§eBodyguards: §fnone hired yet");
+            } else {
+                sender.sendMessage("§eBodyguards (" + bodyguards.size() + "/2):");
+                for (UUID id : bodyguards) {
+                    sender.sendMessage("§7 - §f" + nameOf(id) + statusOf(id));
+                }
+            }
+
+            sender.sendMessage("§eAssassin: §f" + (assassinId == null ? "not chosen yet" : nameOf(assassinId) + statusOf(assassinId)
+                    + (assassinRewarded ? " §6(rewarded)" : "")));
+            sender.sendMessage("§eElection active: §f" + electionActive);
+            return true;
+        }
     return true;
     }
     @Override
@@ -934,6 +984,94 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
         }
     }
 
+    private void giveAssassinReward(Player assassin) {
+        Random r = new Random();
+        if (assassinRewarded) return;   // never reward twice
+        assassinRewarded = true;
+
+
+        Bukkit.broadcastMessage("§4The Assassin has killed the president!");
+        Bukkit.getScheduler().runTaskLater(this, () -> {
+            assassin.sendMessage("§6Congratulations! Here is your reward assassin.");
+        }, 60L);
+        // Food
+
+        Bukkit.getScheduler().runTaskLater(this, () -> {
+
+            int f = r.nextInt(5);
+            if (f == 0) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:bread\",count:32}}");
+            } else if (f == 1) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:cooked_beef\",count:28}}");
+            } else if (f == 2) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:golden_carrot\",count:20}}");
+            } else if (f == 3) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:golden_apple\",count:8}}");
+            } else if (f == 4) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:apple\",count:16}}");
+            }
+        }, 40L);
+
+        // Blocks
+        Bukkit.getScheduler().runTaskLater(this, () -> {
+
+            int f = r.nextInt(5);
+            if (f == 0) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:cobbled_deepslate\",count:48}}");
+            } else if (f == 1) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:oak_log\",count:38}}");
+            } else if (f == 2) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:obsidian\",count:20}}");
+            } else if (f == 3) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:sand\",count:16}}");
+            } else if (f == 4) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:blue_ice\",count:16}}");
+            }
+        }, 40L);
+
+        // Materials
+
+        Bukkit.getScheduler().runTaskLater(this, () -> {
+
+            int f = r.nextInt(6);
+            if (f == 0) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:emerald\",count:32}}");
+            } else if (f == 1) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:iron_ingot\",count:28}}");
+            } else if (f == 2) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:diamond\",count:16}}");
+            } else if (f == 3) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:netherite_upgrade_smithing_template\",count:1}}");
+            } else if (f == 4) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:netherite_ingot\",count:1}}");
+            } else if (f == 5) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"redstone\",count:48}}");
+            }
+        }, 40L);
+
+        // extras
+
+        Bukkit.getScheduler().runTaskLater(this, () -> {
+
+            int f = r.nextInt(6);
+            if (f == 0) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:trident\",count:1}}");
+            } else if (f == 1) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:ender_pearl\",count:8}}");
+            } else if (f == 2) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:breeze_rod\",count:12}}");
+            } else if (f == 3) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:tnt_minecart\",count:1}}");
+            } else if (f == 4) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:netherite_ingot\",count:1}}");
+            } else if (f == 5) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"redstone\",count:48}}");
+            }
+        }, 40L);
+    }
+
+
+
     private void tell(UUID id, String msg) {
         Player p = id == null ? null : Bukkit.getPlayer(id);
         if (p != null) p.sendMessage(msg);
@@ -952,6 +1090,19 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
     private UUID assassinId = null;
 
     private boolean electionActive = false;
+
+    private String nameOf(UUID id) {
+        String name = Bukkit.getOfflinePlayer(id).getName();
+        return name == null ? id.toString() : name;
+    }
+
+    private String statusOf(UUID id) {
+        Player p = Bukkit.getPlayer(id);
+        if (p == null) return " §8(offline)";
+        if (diedTonight.contains(id)) return " §c(died tonight)";
+        return " §a(online)";
+    }
+
 
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) throws InterruptedException {
@@ -1005,15 +1156,8 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
                 Player killer = player.getKiller();
                 if (killer != null && killer.getUniqueId().equals(assassinId)) {
                     Bukkit.broadcastMessage("§4The assassin has killed the president!");
-                    Location loc = killer.getLocation();
-                    Bukkit.getScheduler().runTaskLater(this, () -> {
-                        killer.sendMessage("§4Congradulations! Here is your reward.");
-                    }, 40L);
-                    // We do something like you get 4 rewards. Food, Blocks, Materials, Misilanious.
-                    // Food would be steak, apples, bread, golden carrots, pork chops, fish ect
-                    // Blocks would be wood, obi, crying obi, dirt, leaves, deepslate, tnt
-                    // Materials would be iron, gold, emeralds, diamonds, netherite, redstone
-                    // Misilanious would be tridents, spawn eggs, books, tnt minecart, enchanting table
+
+                    giveAssassinReward(killer);
                 }
                 electionActive = false;   // resolved, so morning doesn't resolve it again
             }

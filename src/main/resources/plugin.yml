@@ -12,3 +12,13 @@ commands:
     usage: /vote <player>
   hire:
     usage: /hire <player>
+
+  assassinreward:
+    description: Reward the assassin and protect them from losing a life
+    usage: /assassinreward
+    permission: bloodmoonlife.admin
+
+  election:
+    description: Show the president, bodyguards and assassin
+    usage: /election
+    permission: bloodmoonlife.admin
