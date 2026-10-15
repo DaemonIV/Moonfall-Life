@@ -28,8 +28,9 @@ class MyClient(discord.Client):
                 print(command, user_message)
 
         if command == '/rules':
-            bot_response = chatgpt_response(prompt=user_message)
-            await message.channel.sent(f"{bot_response}")
+            async with message.channel.typing():
+                bot_response = chatgpt_response(prompt=user_message)
+            await message.channel.send(f"{bot_response}")
 
 
 intents = discord.Intents.default()
