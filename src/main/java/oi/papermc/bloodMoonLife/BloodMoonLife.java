@@ -648,7 +648,44 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
                     if (a == 0) {
                         this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a times 20 140 40");
                         this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83e\\ude78 The Blood Democratic moon has risen! \\ud83e\\ude78\",\"color\":\"dark_blue\"}");
-                        return;
+                        Bukkit.broadcastMessage("§6Voting closes in 1 minute!");
+                        Bukkit.getScheduler().runTaskLater(this, () -> {
+                            UUID winner = null;
+                            int best = 0;
+                            for (Map.Entry<UUID, Integer> e : voteCounts.entrySet()) {
+                                if (e.getValue() > best) {
+                                    best = e.getValue();
+                                    winner = e.getKey();
+                                }
+                            }
+                            if (winner != null) {
+                                Bukkit.broadcastMessage("§6And the winner is...");
+                                presidentId = winner;
+                                int finalBest = best;
+                                Bukkit.getScheduler().runTaskLater(this, () -> {
+                                    Bukkit.broadcastMessage("§6" + Bukkit.getOfflinePlayer(presidentId).getName() + " won with " + finalBest + " votes!");
+                                }, 60L);
+                            }
+
+                            if (presidentId != null) {
+                                Player president = Bukkit.getPlayer(presidentId);
+                                if (president != null) {
+                                    president.sendMessage("§6Welcome President! You now have 1 minute to decide 2 non-reds to be your bodyguards (/hire). Failure to do so will result in the loss of your life. Once they are picked, a random player will become an assassin. This player will have the task to kill you. If they kill you, you lose that life and your bodyguards will also each lose a life if they didn't die. If you survive the night, you shall gain rewards and the assassin shall lose a life. Good luck President.");
+                                }
+                            }
+                            electionActive = true;
+
+                            return;
+                        }, 1200L);
+
+                        Bukkit.getScheduler().runTaskLater(this, () -> {
+                            Player president = Bukkit.getPlayer(presidentId);
+
+                            if (bodyguards.size() < 2) {
+                                loseLife(Bukkit.getOfflinePlayer(presidentId).getName());
+                                Bukkit.broadcastMessage("§cThe president failed to hire 2 bodyguards and loses a life!");
+                            }
+                        }, 1200L);
                     }
 
                     this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a times 20 140 40");
@@ -723,7 +760,10 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
                     electionActive = false;
                     Bukkit.broadcastMessage("§aThe president survived the night!");
                     tell(presidentId, "§6You survived! Here is your reward.");
-                    Bukkit.broadcastMessage("Insert president reward here");
+
+
+                    Player p = Bukkit.getPlayer(presidentId);
+                    giveAssassinReward(p);
                     // reward
 
                     if (assassinId != null) {
@@ -988,11 +1028,15 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
         Random r = new Random();
         if (assassinRewarded) return;   // never reward twice
         assassinRewarded = true;
+        Location assloc = assassin.getLocation();
+
+        double assx = assloc.getX();
+        double assy = assloc.getY() + 2;
+        double assz = assloc.getZ();
 
 
-        Bukkit.broadcastMessage("§4The Assassin has killed the president!");
         Bukkit.getScheduler().runTaskLater(this, () -> {
-            assassin.sendMessage("§6Congratulations! Here is your reward assassin.");
+            assassin.sendMessage("§6Congratulations! Here is your reward.");
         }, 60L);
         // Food
 
@@ -1000,15 +1044,15 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
 
             int f = r.nextInt(5);
             if (f == 0) {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:bread\",count:32}}");
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item " + assx + " " + assy + " " + assz + " {Item:{id:\"minecraft:bread\",count:32}}");
             } else if (f == 1) {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:cooked_beef\",count:28}}");
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item " + assx + " " + assy + " " + assz + " {Item:{id:\"minecraft:cooked_beef\",count:28}}");
             } else if (f == 2) {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:golden_carrot\",count:20}}");
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item " + assx + " " + assy + " " + assz + " {Item:{id:\"minecraft:golden_carrot\",count:20}}");
             } else if (f == 3) {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:golden_apple\",count:8}}");
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item " + assx + " " + assy + " " + assz + " {Item:{id:\"minecraft:golden_apple\",count:8}}");
             } else if (f == 4) {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:apple\",count:16}}");
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item " + assx + " " + assy + " " + assz + " {Item:{id:\"minecraft:apple\",count:16}}");
             }
         }, 40L);
 
@@ -1017,15 +1061,15 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
 
             int f = r.nextInt(5);
             if (f == 0) {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:cobbled_deepslate\",count:48}}");
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item " + assx + " " + assy + " " + assz + " {Item:{id:\"minecraft:cobbled_deepslate\",count:48}}");
             } else if (f == 1) {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:oak_log\",count:38}}");
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item " + assx + " " + assy + " " + assz + " {Item:{id:\"minecraft:oak_log\",count:38}}");
             } else if (f == 2) {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:obsidian\",count:20}}");
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item " + assx + " " + assy + " " + assz + " {Item:{id:\"minecraft:obsidian\",count:20}}");
             } else if (f == 3) {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:sand\",count:16}}");
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item " + assx + " " + assy + " " + assz + " {Item:{id:\"minecraft:sand\",count:16}}");
             } else if (f == 4) {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:blue_ice\",count:16}}");
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item " + assx + " " + assy + " " + assz + " {Item:{id:\"minecraft:blue_ice\",count:16}}");
             }
         }, 40L);
 
@@ -1035,17 +1079,17 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
 
             int f = r.nextInt(6);
             if (f == 0) {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:emerald\",count:32}}");
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item " + assx + " " + assy + " " + assz + " {Item:{id:\"minecraft:emerald\",count:32}}");
             } else if (f == 1) {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:iron_ingot\",count:28}}");
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item " + assx + " " + assy + " " + assz + " {Item:{id:\"minecraft:iron_ingot\",count:28}}");
             } else if (f == 2) {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:diamond\",count:16}}");
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item " + assx + " " + assy + " " + assz + " {Item:{id:\"minecraft:diamond\",count:16}}");
             } else if (f == 3) {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:netherite_upgrade_smithing_template\",count:1}}");
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item " + assx + " " + assy + " " + assz + " {Item:{id:\"minecraft:netherite_upgrade_smithing_template\",count:1}}");
             } else if (f == 4) {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:netherite_ingot\",count:1}}");
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item " + assx + " " + assy + " " + assz + " {Item:{id:\"minecraft:netherite_ingot\",count:1}}");
             } else if (f == 5) {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"redstone\",count:48}}");
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item " + assx + " " + assy + " " + assz + " {Item:{id:\"redstone\",count:48}}");
             }
         }, 40L);
 
@@ -1055,25 +1099,25 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
 
             int f = r.nextInt(10);
             if (f == 0) {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:trident\",count:1}}");
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item " + assx + " " + assy + " " + assz + " {Item:{id:\"minecraft:trident\",count:1}}");
             } else if (f == 1) {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:ender_pearl\",count:8}}");
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item " + assx + " " + assy + " " + assz + " Item:{id:\"minecraft:ender_pearl\",count:8}}");
             } else if (f == 2) {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:breeze_rod\",count:12}}");
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item " + assx + " " + assy + " " + assz + " {Item:{id:\"minecraft:breeze_rod\",count:12}}");
             } else if (f == 3) {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:tnt_minecart\",count:1}}");
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item " + assx + " " + assy + " " + assz + " {Item:{id:\"minecraft:tnt_minecart\",count:1}}");
             } else if (f == 4) {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"minecraft:silence_armor_trim_smithing_template\",count:1}}");
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item " + assx + " " + assy + " " + assz + " {Item:{id:\"minecraft:silence_armor_trim_smithing_template\",count:1}}");
             } else if (f == 5) {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"creeper_spawn_egg\",count:8}}");
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item " + assx + " " + assy + " " + assz + " {Item:{id:\"creeper_spawn_egg\",count:8}}");
             }  else if (f == 6) {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"bogged_spawn_egg\",count:12}}");
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item " + assx + " " + assy + " " + assz + " {Item:{id:\"bogged_spawn_egg\",count:12}}");
             }  else if (f == 7) {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"wither_skeleton_skull\",count:1}}");
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item " + assx + " " + assy + " " + assz + " {Item:{id:\"wither_skeleton_skull\",count:1}}");
             }  else if (f == 8) {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"experience_bottle\",count:28}}");
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item " + assx + " " + assy + " " + assz + " {Item:{id:\"experience_bottle\",count:28}}");
             }  else if (f == 9) {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item ~ ~ ~ {Item:{id:\"ominous_trial_key\",count:1}}");
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item " + assx + " " + assy + " " + assz + " {Item:{id:\"ominous_trial_key\",count:1}}");
             }
         }, 40L);
     }
