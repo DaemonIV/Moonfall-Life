@@ -137,10 +137,49 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
                     isBloodMoon = false;
                     this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a times 20 140 40");
                     this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83c\\udf19 The monster moon has risen! \\ud83c\\udf19\",\"color\":\"dark_blue\"}");
-                    world.setMonsterSpawnLimit(200);
-                    world.setAnimalSpawnLimit(30);
-                    world.setWaterAnimalSpawnLimit(15);
-                    world.setTicksPerMonsterSpawns(0);
+                    int mobnether = r.nextInt(8) + 5;
+                    int mobtimer = 10000 / mobnether;
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            if (!hasAnnouncedNight) {
+                                this.cancel();
+                                return;
+                            }
+                            Location loc = getRandomLocation();
+                            int x = loc.getBlockX();
+                            int y = loc.getBlockY();
+                            int z = loc.getBlockZ();
+                            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon lightning_bolt " + x + " " + y + " " + z);
+                            int mobnum = r.nextInt(11) + 5;
+                            int mobid = r.nextInt(12);
+                            while (mobnum != 0) {
+                                mobnum = mobnum - 1;
+                                mobid = r.nextInt(9);
+
+                                if (mobid == 0) {
+                                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon ghast " + x + " " + (y + 2) + " " + z + " {Glowing:1b,PersistenceRequired:1b}");
+                                } else if (mobid == 1) {
+                                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon wither_skeleton " + x + " " + y + " " + z + " {Glowing:1b,PersistenceRequired:1b,equipment:{mainhand:{id:iron_sword},chest:{id:iron_chestplate},feet:{id:iron_boots}}}");
+                                } else if (mobid == 2) {
+                                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon wither_skeleton " + x + " " + y + " " + z + " {Glowing:1b,PersistenceRequired:1b,equipment:{mainhand:{id:stone_axe},chest:{id:chainmail_chestplate},feet:{id:iron_boots}}}");
+                                } else if (mobid == 3) {
+                                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon skeleton_horse " + x + " " + y + " " + z + " {Glowing:1b,PersistenceRequired:1b,Passengers:[{id:\"minecraft:wither_skeleton\",Glowing:1b,PersistenceRequired:1b,equipment:{mainhand:{id:\"minecraft:diamond_spear\"},chest:{id:\"minecraft:chainmail_chestplate\"},legs:{id:\"minecraft:leather_leggings\"},feet:{id:\"minecraft:leather_boots\"}}}]}");
+                                } else if (mobid == 4) {
+                                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon magma_cube " + x + " " + y + " " + z + " {Size:5,Glowing:1b,PersistenceRequired:1b}");
+                                } else if (mobid == 5) {
+                                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon magma_cube " + x + " " + y + " " + z + " {Size:6,Glowing:1b,PersistenceRequired:1b}");
+                                } else if (mobid == 6) {
+                                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon blaze " + x + " " + y + " " + z + " {Glowing:1b,PersistenceRequired:1b}");
+                                } else if (mobid == 7) {
+                                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon hoglin " + x + " " + y + " " + z + " {IsImmuneToZombification:1,Glowing:1b,PersistenceRequired:1b}");
+                                } else if (mobid == 8) {
+                                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon wither_skeleton " + x + " " + y + " " + z + " {Glowing:1b,PersistenceRequired:1b,equipment:{mainhand:{id:bow,components:{enchantments:{power:3,punch:1}}},head:{id:leather_helmet},chest:{id:leather_chestplate},legs:{id:leather_leggings},feet:{id:leather_boots}}}");
+                                }
+
+                            }
+                        }
+                    }.runTaskTimer(plugin, 0L, mobtimer);
 
 
                 } else if (b == 2) {
@@ -645,48 +684,6 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
                     votedFor.clear();
                     voteCounts.clear();
                     assassinRewarded = false;
-                    if (a == 0) {
-                        this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a times 20 140 40");
-                        this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83e\\ude78 The Blood Democratic moon has risen! \\ud83e\\ude78\",\"color\":\"dark_blue\"}");
-                        Bukkit.broadcastMessage("§6Voting closes in 1 minute!");
-                        Bukkit.getScheduler().runTaskLater(this, () -> {
-                            UUID winner = null;
-                            int best = 0;
-                            for (Map.Entry<UUID, Integer> e : voteCounts.entrySet()) {
-                                if (e.getValue() > best) {
-                                    best = e.getValue();
-                                    winner = e.getKey();
-                                }
-                            }
-                            if (winner != null) {
-                                Bukkit.broadcastMessage("§6And the winner is...");
-                                presidentId = winner;
-                                int finalBest = best;
-                                Bukkit.getScheduler().runTaskLater(this, () -> {
-                                    Bukkit.broadcastMessage("§6" + Bukkit.getOfflinePlayer(presidentId).getName() + " won with " + finalBest + " votes!");
-                                }, 60L);
-                            }
-
-                            if (presidentId != null) {
-                                Player president = Bukkit.getPlayer(presidentId);
-                                if (president != null) {
-                                    president.sendMessage("§6Welcome President! You now have 1 minute to decide 2 non-reds to be your bodyguards (/hire). Failure to do so will result in the loss of your life. Once they are picked, a random player will become an assassin. This player will have the task to kill you. If they kill you, you lose that life and your bodyguards will also each lose a life if they didn't die. If you survive the night, you shall gain rewards and the assassin shall lose a life. Good luck President.");
-                                }
-                            }
-                            electionActive = true;
-
-                            return;
-                        }, 1200L);
-
-                        Bukkit.getScheduler().runTaskLater(this, () -> {
-                            Player president = Bukkit.getPlayer(presidentId);
-
-                            if (bodyguards.size() < 2) {
-                                loseLife(Bukkit.getOfflinePlayer(presidentId).getName());
-                                Bukkit.broadcastMessage("§cThe president failed to hire 2 bodyguards and loses a life!");
-                            }
-                        }, 1200L);
-                    }
 
                     this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a times 20 140 40");
                     this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83e\\ude78 The Democratic moon has risen! \\ud83e\\ude78\",\"color\":\"dark_blue\"}");
