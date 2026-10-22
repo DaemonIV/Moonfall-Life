@@ -63,13 +63,13 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
                 //a = r.nextInt(2);
 
                 b = r.nextInt(10);
-                b = 9;
-                a = 1;
-                //
-                //while (b == 9 && countDemocracyPlayers() > 2) {
-                //    b = r.nextInt(10);
 
-                //}
+                a = 1;
+
+                while (b == 9 && countDemocracyPlayers() > 2) {
+                   b = r.nextInt(10);
+
+                }
 
 
 
@@ -128,10 +128,68 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
                         isBloodMoon = true;
                         this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a times 20 140 40");
                         this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83e\\ude78 The blood monster moon has risen! \\ud83e\\ude78\",\"color\":\"dark_red\"}");
-                        world.setMonsterSpawnLimit(300);
-                        world.setAnimalSpawnLimit(40);
-                        world.setWaterAnimalSpawnLimit(25);
-                        world.setTicksPerMonsterSpawns(0);
+                        int mobnether = r.nextInt(8) + 5;
+                        int mobtimer = 10000 / mobnether;
+                        new BukkitRunnable() {
+                            @Override
+                            public void run() {
+                                if (!hasAnnouncedNight) {
+                                    this.cancel();
+                                    return;
+                                }
+                                Location loc = getRandomLocation();
+                                int x = loc.getBlockX();
+                                int y = loc.getBlockY();
+                                int z = loc.getBlockZ();
+                                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon lightning_bolt " + x + " " + y + " " + z);
+
+                                new BukkitRunnable() {
+                                    @Override
+                                    public void run() {
+                                        if (!hasAnnouncedNight) {
+                                            this.cancel();
+                                            return;
+                                        }
+                                        int mobnum = r.nextInt(13) + 6;
+                                        int mobid = r.nextInt(12);
+                                        while (mobnum != 0) {
+                                            mobnum = mobnum - 1;
+                                            mobid = r.nextInt(13);
+
+                                            if (mobid == 0) {
+                                                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon creeper    " + x + " " + y + " " + z + "  {powered:1,Glowing:1b,PersistenceRequired:1b}");
+                                            } else if (mobid == 1) {
+                                                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon husk " + x + " " + y + " " + z + "  {Glowing:1b,PersistenceRequired:1b,equipment:{mainhand:{id:diamond_sword},head:{id:iron_helmet},chest:{id:iron_chestplate},legs:{id:chainmail_leggings},feet:{id:iron_boots}}}");
+                                            } else if (mobid == 2) {
+                                                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon husk " + x + " " + y + " " + z + " {Glowing:1b,PersistenceRequired:1b,equipment:{mainhand:{id:iron_axe},head:{id:chainmail_helmet},chest:{id:iron_chestplate},legs:{id:chainmail_leggings},feet:{id:chainmail_boots}}}");
+                                            } else if (mobid == 3) {
+                                                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon camel_husk " + x + " " + y + " " + z + " {Glowing:1b,PersistenceRequired:1b,Passengers:[{id:husk,Glowing:1b,PersistenceRequired:1b,equipment:{mainhand:{id:iron_spear},head:{id:leather_helmet},chest:{id:iron_chestplate},legs:{id:leather_leggings},feet:{id:chainmail_boots}}}]}");
+                                            } else if (mobid == 4) {
+                                                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon bogged " + x + " " + y + " " + z + " {Glowing:1b,PersistenceRequired:1b,equipment:{mainhand:{id:bow},head:{id:chainmail_boots},chest:{id:iron_chestplate},legs:{id:iron_leggings},feet:{id:chainmail_boots}}}");
+                                            } else if (mobid == 5) {
+                                                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon stray " + x + " " + y + " " + z + " {Glowing:1b,PersistenceRequired:1b,equipment:{mainhand:{id:bow},head:{id:chainmail_boots},chest:{id:iron_chestplate},legs:{id:iron_leggings},feet:{id:chainmail_boots}}}");
+                                            } else if (mobid == 6) {
+                                                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon witch " + x + " " + y + " " + z + " {Glowing:1b,PersistenceRequired:1b}");
+                                            } else if (mobid == 7) {
+                                                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon phantom " + x + " " + y + " " + z + " {Glowing:1b,PersistenceRequired:1b}");
+                                            } else if (mobid == 8) {
+                                                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon guardian " + x + " " + y + " " + z + " {Glowing:1b,PersistenceRequired:1b}");
+                                            } else if (mobid == 9) {
+                                                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon vindicator " + x + " " + y + " " + z + " {Glowing:1b,PersistenceRequired:1b}");
+                                            } else if (mobid == 10) {
+                                                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon ravager " + x + " " + y + " " + z + " {Glowing:1b,PersistenceRequired:1b}");
+                                            } else if (mobid == 11) {
+                                                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon vex " + x + " " + y + " " + z + " {Glowing:1b,PersistenceRequired:1b}");
+                                            } else if (mobid == 12) {
+                                                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon breeze " + x + " " + y + " " + z + " {Glowing:1b,PersistenceRequired:1b,attributes:[{id:scale,base:2f}]}");
+                                            }
+
+                                        }
+                                    }
+                                }.runTaskTimer(plugin, 0L, 20L);
+
+                            }
+                        }.runTaskTimer(plugin, 0L, mobtimer);
                         return;
                     }
                     isBloodMoon = false;
@@ -151,35 +209,49 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
                             int y = loc.getBlockY();
                             int z = loc.getBlockZ();
                             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon lightning_bolt " + x + " " + y + " " + z);
-                            int mobnum = r.nextInt(11) + 5;
-                            int mobid = r.nextInt(12);
-                            while (mobnum != 0) {
-                                mobnum = mobnum - 1;
-                                mobid = r.nextInt(9);
 
-                                if (mobid == 0) {
-                                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon ghast " + x + " " + (y + 2) + " " + z + " {Glowing:1b,PersistenceRequired:1b}");
-                                } else if (mobid == 1) {
-                                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon wither_skeleton " + x + " " + y + " " + z + " {Glowing:1b,PersistenceRequired:1b,equipment:{mainhand:{id:iron_sword},chest:{id:iron_chestplate},feet:{id:iron_boots}}}");
-                                } else if (mobid == 2) {
-                                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon wither_skeleton " + x + " " + y + " " + z + " {Glowing:1b,PersistenceRequired:1b,equipment:{mainhand:{id:stone_axe},chest:{id:chainmail_chestplate},feet:{id:iron_boots}}}");
-                                } else if (mobid == 3) {
-                                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon skeleton_horse " + x + " " + y + " " + z + " {Glowing:1b,PersistenceRequired:1b,Passengers:[{id:\"minecraft:wither_skeleton\",Glowing:1b,PersistenceRequired:1b,equipment:{mainhand:{id:\"minecraft:diamond_spear\"},chest:{id:\"minecraft:chainmail_chestplate\"},legs:{id:\"minecraft:leather_leggings\"},feet:{id:\"minecraft:leather_boots\"}}}]}");
-                                } else if (mobid == 4) {
-                                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon magma_cube " + x + " " + y + " " + z + " {Size:5,Glowing:1b,PersistenceRequired:1b}");
-                                } else if (mobid == 5) {
-                                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon magma_cube " + x + " " + y + " " + z + " {Size:6,Glowing:1b,PersistenceRequired:1b}");
-                                } else if (mobid == 6) {
-                                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon blaze " + x + " " + y + " " + z + " {Glowing:1b,PersistenceRequired:1b}");
-                                } else if (mobid == 7) {
-                                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon hoglin " + x + " " + y + " " + z + " {IsImmuneToZombification:1,Glowing:1b,PersistenceRequired:1b}");
-                                } else if (mobid == 8) {
-                                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon wither_skeleton " + x + " " + y + " " + z + " {Glowing:1b,PersistenceRequired:1b,equipment:{mainhand:{id:bow,components:{enchantments:{power:3,punch:1}}},head:{id:leather_helmet},chest:{id:leather_chestplate},legs:{id:leather_leggings},feet:{id:leather_boots}}}");
+                            new BukkitRunnable() {
+                                @Override
+                                public void run() {
+                                    if (!hasAnnouncedNight) {
+                                        this.cancel();
+                                        return;
+                                    }
+                                    int mobnum = r.nextInt(11) + 5;
+                                    int mobid = r.nextInt(12);
+                                    while (mobnum != 0) {
+                                        mobnum = mobnum - 1;
+                                        mobid = r.nextInt(10);
+
+                                        if (mobid == 0) {
+                                            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon creeper    " + x + " " + y + " " + z + " {Glowing:1b,PersistenceRequired:1b}");
+                                        } else if (mobid == 1) {
+                                            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon zombie " + x + " " + y + " " + z + "  {Glowing:1b,PersistenceRequired:1b,equipment:{mainhand:{id:iron_sword},head:{id:chainmail_helmet},chest:{id:iron_chestplate},legs:{id:chainmail_leggings},feet:{id:iron_boots}}}");
+                                        } else if (mobid == 2) {
+                                            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon zombie " + x + " " + y + " " + z + " {Glowing:1b,PersistenceRequired:1b,equipment:{mainhand:{id:iron_axe},head:{id:leather_helmet},chest:{id:chainmail_chestplate},legs:{id:leather_leggings},feet:{id:chainmail_boots}}}");
+                                        } else if (mobid == 3) {
+                                            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon skeleton " + x + " " + y + " " + z + " {Glowing:1b,PersistenceRequired:1b,equipment:{mainhand:{id:bow},head:{id:leather_helmet},chest:{id:chainmail_chestplate},legs:{id:leather_leggings},feet:{id:chainmail_boots}}}");
+                                        } else if (mobid == 4) {
+                                            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon skeleton " + x + " " + y + " " + z + " {Glowing:1b,PersistenceRequired:1b,equipment:{mainhand:{id:bow,components:{enchantments:{punch:3}}},head:{id:leather_helmet},chest:{id:leather_chestplate},legs:{id:leather_leggings},feet:{id:leather_boots}}}");
+                                        } else if (mobid == 5) {
+                                            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon slime " + x + " " + y + " " + z + " {Size:5,Glowing:1b,PersistenceRequired:1b}");
+                                        } else if (mobid == 6) {
+                                            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon witch " + x + " " + y + " " + z + " {Glowing:1b,PersistenceRequired:1b}");
+                                        } else if (mobid == 7) {
+                                            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon phantom " + x + " " + y + " " + z + " {Glowing:1b,PersistenceRequired:1b}");
+                                        } else if (mobid == 8) {
+                                            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon cave_spider " + x + " " + y + " " + z + " {Glowing:1b,PersistenceRequired:1b}");
+                                        } else if (mobid == 9) {
+                                            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon pillager " + x + " " + y + " " + z + " {Glowing:1b,PersistenceRequired:1b}");
+                                        }
+
+                                    }
                                 }
+                            }.runTaskTimer(plugin, 0L, 20L);
 
-                            }
                         }
                     }.runTaskTimer(plugin, 0L, mobtimer);
+                    return;
 
 
                 } else if (b == 2) {
@@ -302,9 +374,9 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
                             this.getServer().getScheduler().runTaskLater(this, () -> {
 
                                 Bukkit.broadcastMessage("§aA chest has spawned at " + x + " " + z);
-                                String[] lootitems = {"DIAMOND", "IRON_INGOT", "NETHERITE_INGOT", "NETHERITE_UPGRADE_SMITHING_TEMPLATE", "WITHER_SKELETON_SKULL", "COBWEB", "REDSTONE", "COAL", "IRON_GOLEM_SPAWN_EGG", "VILLAGER_SPAWN_EGG", "BOGGED_SPAWN_EGG", "CREEPER_SPAWN_EGG", "WITHER_SKELETON_SPAWN_EGG", "ZOMBIE_SPAWN_EGG", "VEX_SPAWN_EGG", "GUARDIAN_SPAWN_EGG", "WARDEN_SPAWN_EGG", "BLAZE_SPAWN_EGG", "PIGLIN_BRUTE_SPAWN_EGG", "DRIED_GHAST", "LAPIS_LAZULI", "EMERALD", "ENDER_PEARL", "EXPERIENCE_BOTTLE", "BREEZE_ROD", "GOLDEN_APPLE", "GOLDEN_CARROT", "STEAK", "APPLE", "BREAD", "DIAMOND_HORSE_ARMOR", "NETHERITE_HORSE_ARMOR", "TRIDENT", "ARROW", "AXOLOTL_BUCKET", "LAVA_BUCKET", "POWDER_SNOW_BUCKET", "RECOVERY_COMPASS", "ECHO_SHARD", "GOAT_HORN", "SCULK_SENSOR", "TNT", "TNT_MINECART", "OBSIDIAN", "POINTED_DRIPSTONE", "SNIFFER_EGG", "TURTLE_EGG", "OAK_LOG", "SPRUCE_LOG", "BIRCH_LOG", "JUNGLE_LOG", "ACACIA_LOG", "DARK_OAK_LOG", "MANGROVE_LOG", "CHERRY_LOG", "PALE_OAK_LOG", "CRIMSON_NYLIUM", "WARPED_STEM", "NETHER_STAR", "ENCHANTING_TABLE", "SPAWNER"};
+                                String[] lootitems = {"DIAMOND", "IRON_INGOT", "NETHERITE_INGOT", "NETHERITE_UPGRADE_SMITHING_TEMPLATE", "WITHER_SKELETON_SKULL", "COBWEB", "REDSTONE", "COAL", "IRON_GOLEM_SPAWN_EGG", "VILLAGER_SPAWN_EGG", "BOGGED_SPAWN_EGG", "CREEPER_SPAWN_EGG", "WITHER_SKELETON_SPAWN_EGG", "ZOMBIE_SPAWN_EGG", "VEX_SPAWN_EGG", "GUARDIAN_SPAWN_EGG", "WARDEN_SPAWN_EGG", "BLAZE_SPAWN_EGG", "PIGLIN_BRUTE_SPAWN_EGG", "DRIED_GHAST", "LAPIS_LAZULI", "EMERALD", "ENDER_PEARL", "EXPERIENCE_BOTTLE", "BREEZE_ROD", "GOLDEN_APPLE", "GOLDEN_CARROT", "COOKED_BEEF", "APPLE", "BREAD", "DIAMOND_HORSE_ARMOR", "NETHERITE_HORSE_ARMOR", "TRIDENT", "ARROW", "AXOLOTL_BUCKET", "LAVA_BUCKET", "POWDER_SNOW_BUCKET", "RECOVERY_COMPASS", "ECHO_SHARD", "GOAT_HORN", "SCULK_SENSOR", "TNT", "TNT_MINECART", "OBSIDIAN", "POINTED_DRIPSTONE", "SNIFFER_EGG", "TURTLE_EGG", "OAK_LOG", "SPRUCE_LOG", "BIRCH_LOG", "JUNGLE_LOG", "ACACIA_LOG", "DARK_OAK_LOG", "MANGROVE_LOG", "CHERRY_LOG", "PALE_OAK_LOG", "CRIMSON_NYLIUM", "WARPED_STEM", "NETHER_STAR", "ENCHANTING_TABLE", "SPAWNER" , "enchanted_book[enchantments={sharpness:2}]", "enchanted_book[enchantments={sharpness:3}]", "enchanted_book[enchantments={knockback:2}]", "enchanted_book[enchantments={fire_aspect:2}", "enchanted_book[enchantments={protection:2}", "enchanted_book[enchantments={protection:3}", "enchanted_book[enchantments={loyalty:3}", "enchanted_book[enchantments={feather_falling:3}", "enchanted_book[enchantments={looting:2}", "enchanted_book[enchantments={power:3}"};
                                 // Min, Max, Weight, ID
-                                int[][] lootpoolvar = {{1, 10, 15, 0}, {5, 20, 20, 1}, {1, 1, 5, 2}, {1, 1, 5, 3}, {1, 3, 3, 4}, {6, 15, 15, 5}, {10, 40, 10, 6}, {10, 64, 10, 7}, {1, 3, 7, 8}, {1, 1, 5, 9}, {1, 12, 5, 10}, {1, 12, 15, 11}, {1, 8, 5, 12}, {1, 12, 15, 13}, {1, 8, 3, 14}, {1, 8, 5, 15}, {1, 1, 1, 16}, {1, 12, 5, 17}, {1, 1, 3, 18}, {1, 2, 10, 19}, {10, 40, 10, 20}, {10, 32, 7, 21}, {2, 12, 10, 22}, {8, 32, 10, 23}, {1, 12, 10, 24}, {3, 16, 5, 25}, {8, 32, 7, 26}, {8, 48, 10, 27}, {4, 20, 15, 28}, {10, 32, 20, 29}, {1, 1, 10, 30}, {1, 1, 1, 31}, {1, 1, 5, 32}, {8, 64, 20, 33}, {1, 1, 5, 34}, {1, 1, 7, 35}, {1, 1, 7, 36}, {1, 1, 10, 37}, {2, 8, 10, 38}, {1, 1, 10, 39}, {1, 6, 15, 40}, {1, 16, 7, 41}, {1, 1, 10, 42}, {8, 22, 15, 43}, {1, 12, 10, 44}, {1, 1, 7, 45}, {1, 4, 5, 46}, {12, 32, 5, 47}, {12, 32, 5, 48}, {12, 32, 5, 49}, {12, 32, 5, 50}, {12, 32, 5, 51}, {12, 32, 5, 52}, {12, 32, 5, 53}, {12, 32, 5, 54}, {12, 32, 5, 55}, {12, 32, 5, 56}, {12, 32, 5, 57}, {1, 1, 3, 58}, {1, 1, 10, 59}, {1, 1, 1, 60}};
+                                int[][] lootpoolvar = {{1, 10, 15, 0}, {5, 20, 20, 1}, {1, 1, 5, 2}, {1, 1, 5, 3}, {1, 3, 3, 4}, {6, 15, 15, 5}, {10, 40, 10, 6}, {10, 64, 10, 7}, {1, 3, 7, 8}, {1, 1, 5, 9}, {1, 12, 5, 10}, {1, 12, 15, 11}, {1, 8, 5, 12}, {1, 12, 15, 13}, {1, 8, 3, 14}, {1, 8, 5, 15}, {1, 1, 1, 16}, {1, 12, 5, 17}, {1, 1, 3, 18}, {1, 2, 10, 19}, {10, 40, 10, 20}, {10, 32, 7, 21}, {2, 12, 10, 22}, {8, 32, 10, 23}, {1, 12, 10, 24}, {3, 16, 5, 25}, {8, 32, 7, 26}, {8, 48, 10, 27}, {4, 20, 15, 28}, {10, 32, 20, 29}, {1, 1, 10, 30}, {1, 1, 1, 31}, {1, 1, 5, 32}, {8, 64, 20, 33}, {1, 1, 5, 34}, {1, 1, 7, 35}, {1, 1, 7, 36}, {1, 1, 10, 37}, {2, 8, 10, 38}, {1, 1, 10, 39}, {1, 6, 15, 40}, {1, 16, 7, 41}, {1, 1, 10, 42}, {8, 22, 15, 43}, {1, 12, 10, 44}, {1, 1, 7, 45}, {1, 4, 5, 46}, {12, 32, 5, 47}, {12, 32, 5, 48}, {12, 32, 5, 49}, {12, 32, 5, 50}, {12, 32, 5, 51}, {12, 32, 5, 52}, {12, 32, 5, 53},{12, 32, 5, 54}, {12, 32, 5, 55}, {12, 32, 5, 56}, {12, 32, 5, 57}, {1, 1, 3, 58}, {1, 1, 10, 59}, {1, 1, 1, 60}, {1, 1, 5, 61}, {1, 1, 3, 62}, {1, 1, 3, 63}, {1, 1, 3, 64}, {1, 1, 5, 65}, {1, 1, 3, 66}, {1, 1, 5, 67}, {1, 1, 3, 68}, {1, 1, 3, 69}, {1, 1, 3, 70}};
 
                                 int n = lootpoolvar.length - 1;
 
@@ -403,9 +475,9 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
                         this.getServer().getScheduler().runTaskLater(this, () -> {
 
                             Bukkit.broadcastMessage("§aA chest has spawned at " + x + " " + z);
-                            String[] lootitems = {"DIAMOND", "IRON_INGOT", "NETHERITE_INGOT", "NETHERITE_UPGRADE_SMITHING_TEMPLATE", "WITHER_SKELETON_SKULL", "COBWEB", "REDSTONE", "COAL", "IRON_GOLEM_SPAWN_EGG", "VILLAGER_SPAWN_EGG", "BOGGED_SPAWN_EGG", "CREEPER_SPAWN_EGG", "WITHER_SKELETON_SPAWN_EGG", "ZOMBIE_SPAWN_EGG", "VEX_SPAWN_EGG", "GUARDIAN_SPAWN_EGG", "WARDEN_SPAWN_EGG", "BLAZE_SPAWN_EGG", "PIGLIN_BRUTE_SPAWN_EGG", "DRIED_GHAST", "LAPIS_LAZULI", "EMERALD", "ENDER_PEARL", "EXPERIENCE_BOTTLE", "BREEZE_ROD", "GOLDEN_APPLE", "GOLDEN_CARROT", "COOKED_BEEF", "APPLE", "BREAD", "DIAMOND_HORSE_ARMOR", "NETHERITE_HORSE_ARMOR", "TRIDENT", "ARROW", "AXOLOTL_BUCKET", "LAVA_BUCKET", "POWDER_SNOW_BUCKET", "RECOVERY_COMPASS", "ECHO_SHARD", "GOAT_HORN", "SCULK_SENSOR", "TNT", "TNT_MINECART", "OBSIDIAN", "POINTED_DRIPSTONE", "SNIFFER_EGG", "TURTLE_EGG", "OAK_LOG", "SPRUCE_LOG", "BIRCH_LOG", "JUNGLE_LOG", "ACACIA_LOG", "DARK_OAK_LOG", "MANGROVE_LOG", "CHERRY_LOG", "PALE_OAK_LOG", "CRIMSON_NYLIUM", "WARPED_STEM", "NETHER_STAR", "ENCHANTING_TABLE", "SPAWNER"};
+                            String[] lootitems = {"DIAMOND", "IRON_INGOT", "NETHERITE_INGOT", "NETHERITE_UPGRADE_SMITHING_TEMPLATE", "WITHER_SKELETON_SKULL", "COBWEB", "REDSTONE", "COAL", "IRON_GOLEM_SPAWN_EGG", "VILLAGER_SPAWN_EGG", "BOGGED_SPAWN_EGG", "CREEPER_SPAWN_EGG", "WITHER_SKELETON_SPAWN_EGG", "ZOMBIE_SPAWN_EGG", "VEX_SPAWN_EGG", "GUARDIAN_SPAWN_EGG", "WARDEN_SPAWN_EGG", "BLAZE_SPAWN_EGG", "PIGLIN_BRUTE_SPAWN_EGG", "DRIED_GHAST", "LAPIS_LAZULI", "EMERALD", "ENDER_PEARL", "EXPERIENCE_BOTTLE", "BREEZE_ROD", "GOLDEN_APPLE", "GOLDEN_CARROT", "COOKED_BEEF", "APPLE", "BREAD", "DIAMOND_HORSE_ARMOR", "NETHERITE_HORSE_ARMOR", "TRIDENT", "ARROW", "AXOLOTL_BUCKET", "LAVA_BUCKET", "POWDER_SNOW_BUCKET", "RECOVERY_COMPASS", "ECHO_SHARD", "GOAT_HORN", "SCULK_SENSOR", "TNT", "TNT_MINECART", "OBSIDIAN", "POINTED_DRIPSTONE", "SNIFFER_EGG", "TURTLE_EGG", "OAK_LOG", "SPRUCE_LOG", "BIRCH_LOG", "JUNGLE_LOG", "ACACIA_LOG", "DARK_OAK_LOG", "MANGROVE_LOG", "CHERRY_LOG", "PALE_OAK_LOG", "CRIMSON_NYLIUM", "WARPED_STEM", "NETHER_STAR", "ENCHANTING_TABLE", "SPAWNER" , "enchanted_book[enchantments={sharpness:2}]", "enchanted_book[enchantments={sharpness:3}]", "enchanted_book[enchantments={knockback:2}]", "enchanted_book[enchantments={fire_aspect:2}", "enchanted_book[enchantments={protection:2}", "enchanted_book[enchantments={protection:3}", "enchanted_book[enchantments={loyalty:3}", "enchanted_book[enchantments={feather_falling:3}", "enchanted_book[enchantments={looting:2}", "enchanted_book[enchantments={power:3}"};
                             // Min, Max, Weight, ID
-                            int[][] lootpoolvar = {{1, 10, 15, 0}, {5, 20, 20, 1}, {1, 1, 5, 2}, {1, 1, 5, 3}, {1, 3, 3, 4}, {6, 15, 15, 5}, {10, 40, 10, 6}, {10, 64, 10, 7}, {1, 3, 7, 8}, {1, 1, 5, 9}, {1, 12, 5, 10}, {1, 12, 15, 11}, {1, 8, 5, 12}, {1, 12, 15, 13}, {1, 8, 3, 14}, {1, 8, 5, 15}, {1, 1, 1, 16}, {1, 12, 5, 17}, {1, 1, 3, 18}, {1, 2, 10, 19}, {10, 40, 10, 20}, {10, 32, 7, 21}, {2, 12, 10, 22}, {8, 32, 10, 23}, {1, 12, 10, 24}, {3, 16, 5, 25}, {8, 32, 7, 26}, {8, 48, 10, 27}, {4, 20, 15, 28}, {10, 32, 20, 29}, {1, 1, 10, 30}, {1, 1, 1, 31}, {1, 1, 5, 32}, {8, 64, 20, 33}, {1, 1, 5, 34}, {1, 1, 7, 35}, {1, 1, 7, 36}, {1, 1, 10, 37}, {2, 8, 10, 38}, {1, 1, 10, 39}, {1, 6, 15, 40}, {1, 16, 7, 41}, {1, 1, 10, 42}, {8, 22, 15, 43}, {1, 12, 10, 44}, {1, 1, 7, 45}, {1, 4, 5, 46}, {12, 32, 5, 47}, {12, 32, 5, 48}, {12, 32, 5, 49}, {12, 32, 5, 50}, {12, 32, 5, 51}, {12, 32, 5, 52}, {12, 32, 5, 53},{12, 32, 5, 54}, {12, 32, 5, 55}, {12, 32, 5, 56}, {12, 32, 5, 57}, {1, 1, 3, 58}, {1, 1, 10, 59}, {1, 1, 1, 60}};
+                            int[][] lootpoolvar = {{1, 10, 15, 0}, {5, 20, 20, 1}, {1, 1, 5, 2}, {1, 1, 5, 3}, {1, 3, 3, 4}, {6, 15, 15, 5}, {10, 40, 10, 6}, {10, 64, 10, 7}, {1, 3, 7, 8}, {1, 1, 5, 9}, {1, 12, 5, 10}, {1, 12, 15, 11}, {1, 8, 5, 12}, {1, 12, 15, 13}, {1, 8, 3, 14}, {1, 8, 5, 15}, {1, 1, 1, 16}, {1, 12, 5, 17}, {1, 1, 3, 18}, {1, 2, 10, 19}, {10, 40, 10, 20}, {10, 32, 7, 21}, {2, 12, 10, 22}, {8, 32, 10, 23}, {1, 12, 10, 24}, {3, 16, 5, 25}, {8, 32, 7, 26}, {8, 48, 10, 27}, {4, 20, 15, 28}, {10, 32, 20, 29}, {1, 1, 10, 30}, {1, 1, 1, 31}, {1, 1, 5, 32}, {8, 64, 20, 33}, {1, 1, 5, 34}, {1, 1, 7, 35}, {1, 1, 7, 36}, {1, 1, 10, 37}, {2, 8, 10, 38}, {1, 1, 10, 39}, {1, 6, 15, 40}, {1, 16, 7, 41}, {1, 1, 10, 42}, {8, 22, 15, 43}, {1, 12, 10, 44}, {1, 1, 7, 45}, {1, 4, 5, 46}, {12, 32, 5, 47}, {12, 32, 5, 48}, {12, 32, 5, 49}, {12, 32, 5, 50}, {12, 32, 5, 51}, {12, 32, 5, 52}, {12, 32, 5, 53},{12, 32, 5, 54}, {12, 32, 5, 55}, {12, 32, 5, 56}, {12, 32, 5, 57}, {1, 1, 3, 58}, {1, 1, 10, 59}, {1, 1, 1, 60}, {1, 1, 5, 61}, {1, 1, 3, 62}, {1, 1, 3, 63}, {1, 1, 3, 64}, {1, 1, 5, 65}, {1, 1, 3, 66}, {1, 1, 5, 67}, {1, 1, 3, 68}, {1, 1, 3, 69}, {1, 1, 3, 70}};
 
                             int n = lootpoolvar.length - 1;
 
