@@ -18,6 +18,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.Team;
@@ -46,6 +47,54 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
     private final Set<UUID> handledPlayers = new HashSet<>();
     private boolean assassinRewarded = false;
 
+    private File getBoogeymanFile() {
+        return new File(this.getDataFolder(), "boogeyman.txt");
+    }
+
+    // Reads boogeyman.txt -> { name : 0 or 1 }
+    public Map<String, Integer> readBoogeymen() {
+        Map<String, Integer> map = new LinkedHashMap<>();
+        File file = getBoogeymanFile();
+        if (!file.exists()) return map;
+        try {
+            for (String line : Files.readAllLines(file.toPath())) {
+                line = line.trim();
+                if (line.isEmpty()) continue;
+                String[] parts = line.split("\\s+");
+                if (parts.length < 2) continue;
+                map.put(parts[0], parts[1].equals("1") ? 1 : 0);
+            }
+        } catch (IOException e) {
+            this.getLogger().warning("Could not read boogeyman file: " + e.getMessage());
+        }
+        return map;
+    }
+
+    // Writes { name : 0 or 1 } -> boogeyman.txt, one "name 0/1" per line
+    public void writeBoogeymen(Map<String, Integer> map) {
+        getDataFolder().mkdirs();
+        try (PrintWriter printer = new PrintWriter(new FileWriter(getBoogeymanFile()))) {
+            for (Map.Entry<String, Integer> e : map.entrySet()) {
+                printer.println(e.getKey() + " " + e.getValue());
+            }
+        } catch (IOException e) {
+            this.getLogger().warning("Could not save boogeyman file: " + e.getMessage());
+        }
+    }
+
+    @EventHandler
+    public void onJoin(PlayerJoinEvent event) {
+        Player p = event.getPlayer();
+        if (hasAnnouncedNight) {
+            Bukkit.getScheduler().runTaskLater(this, () -> applyMoonPhase(p, b), 40L);
+        }
+    }
+
+    @Override
+    public void onDisable() {
+        for (Player p : Bukkit.getOnlinePlayers()) p.resetPlayerTime();
+    }
+
     @Override
     public void onEnable() {
         BloodMoonLife plugin = this;
@@ -60,17 +109,21 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
 
                 hasAnnouncedNight = true;
                 Random r = new Random();
-                //a = r.nextInt(2);
+                a = r.nextInt(2);
 
                 b = r.nextInt(10);
 
-                a = 1;
 
-                while (b == 9 && countDemocracyPlayers() > 2) {
-                   b = r.nextInt(10);
+
+
+
+                while (b == 9 && countDemocracyPlayers() > 4) {
+                   b = r.nextInt(9);
 
                 }
-
+                for (Player p : Bukkit.getOnlinePlayers()) {
+                    applyMoonPhase(p, b);
+                }
 
 
                 if (b == 0) {
@@ -78,7 +131,7 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
 
                         isBloodMoon = true;
                         this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a times 20 140 40");
-                        this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83e\\ude78 The blood tiny moon has risen! \\ud83e\\ude78\",\"color\":\"dark_red\"}");
+                        this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83e\\ude78 The shrinking blood moon has risen! \\ud83e\\ude78\",\"color\":\"dark_red\"}");
                         new BukkitRunnable() {
                             @Override
                             public void run() {
@@ -104,7 +157,7 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
 
                     isBloodMoon = false;
                     this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a times 20 140 40");
-                    this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83c\\udf19 The tiny moon has risen! \\ud83c\\udf19\",\"color\":\"dark_blue\"}");
+                    this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83c\\udf19 The shrinking moon has risen! \\ud83c\\udf19\",\"color\":\"dark_blue\"}");
                     new BukkitRunnable() {
                         @Override
                         public void run() {
@@ -127,8 +180,8 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
                     if (a == 0) {
                         isBloodMoon = true;
                         this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a times 20 140 40");
-                        this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83e\\ude78 The blood monster moon has risen! \\ud83e\\ude78\",\"color\":\"dark_red\"}");
-                        int mobnether = r.nextInt(8) + 5;
+                        this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83e\\ude78 The horde blood moon has risen! \\ud83e\\ude78\",\"color\":\"dark_red\"}");
+                        int mobnether = r.nextInt(10) + 6;
                         int mobtimer = 10000 / mobnether;
                         new BukkitRunnable() {
                             @Override
@@ -186,7 +239,7 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
 
                                         }
                                     }
-                                }.runTaskTimer(plugin, 0L, 20L);
+                                }.runTaskLater(plugin,  20L);
 
                             }
                         }.runTaskTimer(plugin, 0L, mobtimer);
@@ -194,8 +247,8 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
                     }
                     isBloodMoon = false;
                     this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a times 20 140 40");
-                    this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83c\\udf19 The monster moon has risen! \\ud83c\\udf19\",\"color\":\"dark_blue\"}");
-                    int mobnether = r.nextInt(8) + 5;
+                    this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83c\\udf19 The horde moon has risen! \\ud83c\\udf19\",\"color\":\"dark_blue\"}");
+                    int mobnether = r.nextInt(8) + 6;
                     int mobtimer = 10000 / mobnether;
                     new BukkitRunnable() {
                         @Override
@@ -247,7 +300,7 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
 
                                     }
                                 }
-                            }.runTaskTimer(plugin, 0L, 20L);
+                            }.runTaskLater(plugin,  20L);
 
                         }
                     }.runTaskTimer(plugin, 0L, mobtimer);
@@ -258,7 +311,7 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
                     if (a == 0) {
                         isBloodMoon = true;
                         this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a times 20 140 40");
-                        this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83e\\ude78 The blood berserk moon has risen! \\ud83e\\ude78\",\"color\":\"dark_red\"}");
+                        this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83e\\ude78 The berserk blood moon has risen! \\ud83e\\ude78\",\"color\":\"dark_red\"}");
                         new BukkitRunnable() {
                             @Override
                             public void run() {
@@ -293,7 +346,7 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
                     if (a == 0) {
                         isBloodMoon = true;
                         this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a times 20 140 40");
-                        this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83e\\ude78 The blood small moon has risen! \\ud83e\\ude78\",\"color\":\"dark_red\"}");
+                        this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83e\\ude78 The astral blood moon has risen! \\ud83e\\ude78\",\"color\":\"dark_red\"}");
                         new BukkitRunnable() {
                             @Override
                             public void run() {
@@ -309,7 +362,7 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
                     }
                     isBloodMoon = false;
                     this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a times 20 140 40");
-                    this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83c\\udf19 The small moon has risen! \\ud83c\\udf19\",\"color\":\"dark_blue\"}");
+                    this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83c\\udf19 The astral moon has risen! \\ud83c\\udf19\",\"color\":\"dark_blue\"}");
                     new BukkitRunnable() {
                         @Override
                         public void run() {
@@ -328,7 +381,7 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
                     if (a == 0){
                         isBloodMoon = true;
                         this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a times 20 140 40");
-                        this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83e\\ude78 The blood harvest moon has risen! \\ud83e\\ude78\",\"color\":\"dark_red\"}");
+                        this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83e\\ude78 The harvest blood moon has risen! \\ud83e\\ude78\",\"color\":\"dark_red\"}");
                         this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "gamerule random_tick_speed 0");
                         return;
 
@@ -336,7 +389,7 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
                     isBloodMoon = false;
                     this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a times 20 140 40");
                     this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83c\\udf19 The harvest moon has risen! \\ud83c\\udf19\",\"color\":\"dark_blue\"}");
-                    this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "gamerule random_tick_speed 30");
+                    this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "gamerule random_tick_speed 20");
                     return;
 
                 // treasure moon
@@ -345,7 +398,7 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
                     if (a == 0) {
                         isBloodMoon = true;
                         this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a times 20 140 40");
-                        this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83e\\ude78 The blood treasure moon has risen! \\ud83e\\ude78\",\"color\":\"dark_red\"}");
+                        this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83e\\ude78 The greed blood moon has risen! \\ud83e\\ude78\",\"color\":\"dark_red\"}");
                         int numberChests = r.nextInt(10) + 1;
                         int intervalSeconds = 500 / numberChests;
 
@@ -374,7 +427,8 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
                             this.getServer().getScheduler().runTaskLater(this, () -> {
 
                                 Bukkit.broadcastMessage("§aA chest has spawned at " + x + " " + z);
-                                String[] lootitems = {"DIAMOND", "IRON_INGOT", "NETHERITE_INGOT", "NETHERITE_UPGRADE_SMITHING_TEMPLATE", "WITHER_SKELETON_SKULL", "COBWEB", "REDSTONE", "COAL", "IRON_GOLEM_SPAWN_EGG", "VILLAGER_SPAWN_EGG", "BOGGED_SPAWN_EGG", "CREEPER_SPAWN_EGG", "WITHER_SKELETON_SPAWN_EGG", "ZOMBIE_SPAWN_EGG", "VEX_SPAWN_EGG", "GUARDIAN_SPAWN_EGG", "WARDEN_SPAWN_EGG", "BLAZE_SPAWN_EGG", "PIGLIN_BRUTE_SPAWN_EGG", "DRIED_GHAST", "LAPIS_LAZULI", "EMERALD", "ENDER_PEARL", "EXPERIENCE_BOTTLE", "BREEZE_ROD", "GOLDEN_APPLE", "GOLDEN_CARROT", "COOKED_BEEF", "APPLE", "BREAD", "DIAMOND_HORSE_ARMOR", "NETHERITE_HORSE_ARMOR", "TRIDENT", "ARROW", "AXOLOTL_BUCKET", "LAVA_BUCKET", "POWDER_SNOW_BUCKET", "RECOVERY_COMPASS", "ECHO_SHARD", "GOAT_HORN", "SCULK_SENSOR", "TNT", "TNT_MINECART", "OBSIDIAN", "POINTED_DRIPSTONE", "SNIFFER_EGG", "TURTLE_EGG", "OAK_LOG", "SPRUCE_LOG", "BIRCH_LOG", "JUNGLE_LOG", "ACACIA_LOG", "DARK_OAK_LOG", "MANGROVE_LOG", "CHERRY_LOG", "PALE_OAK_LOG", "CRIMSON_NYLIUM", "WARPED_STEM", "NETHER_STAR", "ENCHANTING_TABLE", "SPAWNER" , "enchanted_book[enchantments={sharpness:2}]", "enchanted_book[enchantments={sharpness:3}]", "enchanted_book[enchantments={knockback:2}]", "enchanted_book[enchantments={fire_aspect:2}", "enchanted_book[enchantments={protection:2}", "enchanted_book[enchantments={protection:3}", "enchanted_book[enchantments={loyalty:3}", "enchanted_book[enchantments={feather_falling:3}", "enchanted_book[enchantments={looting:2}", "enchanted_book[enchantments={power:3}"};
+                                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:firework_rocket " + x + " " + y + " " + z + " {LifeTime:20,FireworksItem:{id:\"minecraft:firework_rocket\",count:1,components:{\"fireworks\":{explosions:[{shape:\"star\",colors:[I;11743532,4312372,14188952,6719955,2437522,8073150,12801229,3887386,15435844],fade_colors:[I;15790320],has_trail:1b}],flight_duration:3b}}}}");
+                                String[] lootitems = {"DIAMOND", "IRON_INGOT", "NETHERITE_INGOT", "NETHERITE_UPGRADE_SMITHING_TEMPLATE", "WITHER_SKELETON_SKULL", "COBWEB", "REDSTONE", "COAL", "IRON_GOLEM_SPAWN_EGG", "VILLAGER_SPAWN_EGG", "BOGGED_SPAWN_EGG", "CREEPER_SPAWN_EGG", "WITHER_SKELETON_SPAWN_EGG", "ZOMBIE_SPAWN_EGG", "VEX_SPAWN_EGG", "GUARDIAN_SPAWN_EGG", "WARDEN_SPAWN_EGG", "BLAZE_SPAWN_EGG", "PIGLIN_BRUTE_SPAWN_EGG", "DRIED_GHAST", "LAPIS_LAZULI", "EMERALD", "ENDER_PEARL", "EXPERIENCE_BOTTLE", "BREEZE_ROD", "GOLDEN_APPLE", "GOLDEN_CARROT", "COOKED_BEEF", "APPLE", "BREAD", "DIAMOND_HORSE_ARMOR", "NETHERITE_HORSE_ARMOR", "TRIDENT", "ARROW", "AXOLOTL_BUCKET", "LAVA_BUCKET", "POWDER_SNOW_BUCKET", "RECOVERY_COMPASS", "ECHO_SHARD", "GOAT_HORN", "SCULK_SENSOR", "TNT", "TNT_MINECART", "OBSIDIAN", "POINTED_DRIPSTONE", "SNIFFER_EGG", "TURTLE_EGG", "OAK_LOG", "SPRUCE_LOG", "BIRCH_LOG", "JUNGLE_LOG", "ACACIA_LOG", "DARK_OAK_LOG", "MANGROVE_LOG", "CHERRY_LOG", "PALE_OAK_LOG", "CRIMSON_NYLIUM", "WARPED_STEM", "NETHER_STAR", "ENCHANTING_TABLE", "SPAWNER" , "enchanted_book[enchantments={sharpness:2}]", "enchanted_book[enchantments={sharpness:3}]", "enchanted_book[enchantments={knockback:2}]", "enchanted_book[enchantments={fire_aspect:2}]", "enchanted_book[enchantments={protection:2}]", "enchanted_book[enchantments={protection:3}]", "enchanted_book[enchantments={loyalty:3}]", "enchanted_book[enchantments={feather_falling:3}]", "enchanted_book[enchantments={looting:2}]", "enchanted_book[enchantments={power:3}]"};
                                 // Min, Max, Weight, ID
                                 int[][] lootpoolvar = {{1, 10, 15, 0}, {5, 20, 20, 1}, {1, 1, 5, 2}, {1, 1, 5, 3}, {1, 3, 3, 4}, {6, 15, 15, 5}, {10, 40, 10, 6}, {10, 64, 10, 7}, {1, 3, 7, 8}, {1, 1, 5, 9}, {1, 12, 5, 10}, {1, 12, 15, 11}, {1, 8, 5, 12}, {1, 12, 15, 13}, {1, 8, 3, 14}, {1, 8, 5, 15}, {1, 1, 1, 16}, {1, 12, 5, 17}, {1, 1, 3, 18}, {1, 2, 10, 19}, {10, 40, 10, 20}, {10, 32, 7, 21}, {2, 12, 10, 22}, {8, 32, 10, 23}, {1, 12, 10, 24}, {3, 16, 5, 25}, {8, 32, 7, 26}, {8, 48, 10, 27}, {4, 20, 15, 28}, {10, 32, 20, 29}, {1, 1, 10, 30}, {1, 1, 1, 31}, {1, 1, 5, 32}, {8, 64, 20, 33}, {1, 1, 5, 34}, {1, 1, 7, 35}, {1, 1, 7, 36}, {1, 1, 10, 37}, {2, 8, 10, 38}, {1, 1, 10, 39}, {1, 6, 15, 40}, {1, 16, 7, 41}, {1, 1, 10, 42}, {8, 22, 15, 43}, {1, 12, 10, 44}, {1, 1, 7, 45}, {1, 4, 5, 46}, {12, 32, 5, 47}, {12, 32, 5, 48}, {12, 32, 5, 49}, {12, 32, 5, 50}, {12, 32, 5, 51}, {12, 32, 5, 52}, {12, 32, 5, 53},{12, 32, 5, 54}, {12, 32, 5, 55}, {12, 32, 5, 56}, {12, 32, 5, 57}, {1, 1, 3, 58}, {1, 1, 10, 59}, {1, 1, 1, 60}, {1, 1, 5, 61}, {1, 1, 3, 62}, {1, 1, 3, 63}, {1, 1, 3, 64}, {1, 1, 5, 65}, {1, 1, 3, 66}, {1, 1, 5, 67}, {1, 1, 3, 68}, {1, 1, 3, 69}, {1, 1, 3, 70}};
 
@@ -447,7 +501,7 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
                     }
                     isBloodMoon = false;
                     this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a times 20 140 40");
-                    this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83c\\udf19 The treasure moon has risen! \\ud83c\\udf19\",\"color\":\"dark_blue\"}");
+                    this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83c\\udf19 The greed moon has risen! \\ud83c\\udf19\",\"color\":\"dark_blue\"}");
                     int numberChests = r.nextInt(10) + 1;
                     int intervalSeconds = 500 / numberChests;
 
@@ -475,7 +529,8 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
                         this.getServer().getScheduler().runTaskLater(this, () -> {
 
                             Bukkit.broadcastMessage("§aA chest has spawned at " + x + " " + z);
-                            String[] lootitems = {"DIAMOND", "IRON_INGOT", "NETHERITE_INGOT", "NETHERITE_UPGRADE_SMITHING_TEMPLATE", "WITHER_SKELETON_SKULL", "COBWEB", "REDSTONE", "COAL", "IRON_GOLEM_SPAWN_EGG", "VILLAGER_SPAWN_EGG", "BOGGED_SPAWN_EGG", "CREEPER_SPAWN_EGG", "WITHER_SKELETON_SPAWN_EGG", "ZOMBIE_SPAWN_EGG", "VEX_SPAWN_EGG", "GUARDIAN_SPAWN_EGG", "WARDEN_SPAWN_EGG", "BLAZE_SPAWN_EGG", "PIGLIN_BRUTE_SPAWN_EGG", "DRIED_GHAST", "LAPIS_LAZULI", "EMERALD", "ENDER_PEARL", "EXPERIENCE_BOTTLE", "BREEZE_ROD", "GOLDEN_APPLE", "GOLDEN_CARROT", "COOKED_BEEF", "APPLE", "BREAD", "DIAMOND_HORSE_ARMOR", "NETHERITE_HORSE_ARMOR", "TRIDENT", "ARROW", "AXOLOTL_BUCKET", "LAVA_BUCKET", "POWDER_SNOW_BUCKET", "RECOVERY_COMPASS", "ECHO_SHARD", "GOAT_HORN", "SCULK_SENSOR", "TNT", "TNT_MINECART", "OBSIDIAN", "POINTED_DRIPSTONE", "SNIFFER_EGG", "TURTLE_EGG", "OAK_LOG", "SPRUCE_LOG", "BIRCH_LOG", "JUNGLE_LOG", "ACACIA_LOG", "DARK_OAK_LOG", "MANGROVE_LOG", "CHERRY_LOG", "PALE_OAK_LOG", "CRIMSON_NYLIUM", "WARPED_STEM", "NETHER_STAR", "ENCHANTING_TABLE", "SPAWNER" , "enchanted_book[enchantments={sharpness:2}]", "enchanted_book[enchantments={sharpness:3}]", "enchanted_book[enchantments={knockback:2}]", "enchanted_book[enchantments={fire_aspect:2}", "enchanted_book[enchantments={protection:2}", "enchanted_book[enchantments={protection:3}", "enchanted_book[enchantments={loyalty:3}", "enchanted_book[enchantments={feather_falling:3}", "enchanted_book[enchantments={looting:2}", "enchanted_book[enchantments={power:3}"};
+                            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:firework_rocket " + x + " " + y + " " + z + " {LifeTime:20,FireworksItem:{id:\"minecraft:firework_rocket\",count:1,components:{\"fireworks\":{explosions:[{shape:\"star\",colors:[I;11743532,4312372,14188952,6719955,2437522,8073150,12801229,3887386,15435844],fade_colors:[I;15790320],has_trail:1b}],flight_duration:3b}}}}");
+                            String[] lootitems = {"DIAMOND", "IRON_INGOT", "NETHERITE_INGOT", "NETHERITE_UPGRADE_SMITHING_TEMPLATE", "WITHER_SKELETON_SKULL", "COBWEB", "REDSTONE", "COAL", "IRON_GOLEM_SPAWN_EGG", "VILLAGER_SPAWN_EGG", "BOGGED_SPAWN_EGG", "CREEPER_SPAWN_EGG", "WITHER_SKELETON_SPAWN_EGG", "ZOMBIE_SPAWN_EGG", "VEX_SPAWN_EGG", "GUARDIAN_SPAWN_EGG", "WARDEN_SPAWN_EGG", "BLAZE_SPAWN_EGG", "PIGLIN_BRUTE_SPAWN_EGG", "DRIED_GHAST", "LAPIS_LAZULI", "EMERALD", "ENDER_PEARL", "EXPERIENCE_BOTTLE", "BREEZE_ROD", "GOLDEN_APPLE", "GOLDEN_CARROT", "COOKED_BEEF", "APPLE", "BREAD", "DIAMOND_HORSE_ARMOR", "NETHERITE_HORSE_ARMOR", "TRIDENT", "ARROW", "AXOLOTL_BUCKET", "LAVA_BUCKET", "POWDER_SNOW_BUCKET", "RECOVERY_COMPASS", "ECHO_SHARD", "GOAT_HORN", "SCULK_SENSOR", "TNT", "TNT_MINECART", "OBSIDIAN", "POINTED_DRIPSTONE", "SNIFFER_EGG", "TURTLE_EGG", "OAK_LOG", "SPRUCE_LOG", "BIRCH_LOG", "JUNGLE_LOG", "ACACIA_LOG", "DARK_OAK_LOG", "MANGROVE_LOG", "CHERRY_LOG", "PALE_OAK_LOG", "CRIMSON_NYLIUM", "WARPED_STEM", "NETHER_STAR", "ENCHANTING_TABLE", "SPAWNER" , "enchanted_book[enchantments={sharpness:2}]", "enchanted_book[enchantments={sharpness:3}]", "enchanted_book[enchantments={knockback:2}]", "enchanted_book[enchantments={fire_aspect:2}", "enchanted_book[enchantments={protection:2}]", "enchanted_book[enchantments={protection:3}]", "enchanted_book[enchantments={loyalty:3}]", "enchanted_book[enchantments={feather_falling:3}]", "enchanted_book[enchantments={looting:2}]", "enchanted_book[enchantments={power:3}]"};
                             // Min, Max, Weight, ID
                             int[][] lootpoolvar = {{1, 10, 15, 0}, {5, 20, 20, 1}, {1, 1, 5, 2}, {1, 1, 5, 3}, {1, 3, 3, 4}, {6, 15, 15, 5}, {10, 40, 10, 6}, {10, 64, 10, 7}, {1, 3, 7, 8}, {1, 1, 5, 9}, {1, 12, 5, 10}, {1, 12, 15, 11}, {1, 8, 5, 12}, {1, 12, 15, 13}, {1, 8, 3, 14}, {1, 8, 5, 15}, {1, 1, 1, 16}, {1, 12, 5, 17}, {1, 1, 3, 18}, {1, 2, 10, 19}, {10, 40, 10, 20}, {10, 32, 7, 21}, {2, 12, 10, 22}, {8, 32, 10, 23}, {1, 12, 10, 24}, {3, 16, 5, 25}, {8, 32, 7, 26}, {8, 48, 10, 27}, {4, 20, 15, 28}, {10, 32, 20, 29}, {1, 1, 10, 30}, {1, 1, 1, 31}, {1, 1, 5, 32}, {8, 64, 20, 33}, {1, 1, 5, 34}, {1, 1, 7, 35}, {1, 1, 7, 36}, {1, 1, 10, 37}, {2, 8, 10, 38}, {1, 1, 10, 39}, {1, 6, 15, 40}, {1, 16, 7, 41}, {1, 1, 10, 42}, {8, 22, 15, 43}, {1, 12, 10, 44}, {1, 1, 7, 45}, {1, 4, 5, 46}, {12, 32, 5, 47}, {12, 32, 5, 48}, {12, 32, 5, 49}, {12, 32, 5, 50}, {12, 32, 5, 51}, {12, 32, 5, 52}, {12, 32, 5, 53},{12, 32, 5, 54}, {12, 32, 5, 55}, {12, 32, 5, 56}, {12, 32, 5, 57}, {1, 1, 3, 58}, {1, 1, 10, 59}, {1, 1, 1, 60}, {1, 1, 5, 61}, {1, 1, 3, 62}, {1, 1, 3, 63}, {1, 1, 3, 64}, {1, 1, 5, 65}, {1, 1, 3, 66}, {1, 1, 5, 67}, {1, 1, 3, 68}, {1, 1, 3, 69}, {1, 1, 3, 70}};
 
@@ -532,7 +587,7 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
                     } else if (b == 6) {
                     if (a == 0) {
                         this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a times 20 140 40");
-                        this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83e\\ude78 The blood Giant moon has risen! \\ud83e\\ude78\",\"color\":\"dark_red\"}");
+                        this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83e\\ude78 The titan blood moon has risen! \\ud83e\\ude78\",\"color\":\"dark_red\"}");
                         new BukkitRunnable() {
                             @Override
                             public void run() {
@@ -567,7 +622,7 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
                         return;
                     }
                     this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a times 20 140 40");
-                    this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83e\\ude78 The Giant moon has risen! \\ud83e\\ude78\",\"color\":\"dark_blue\"}");
+                    this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83e\\ude78 The titan moon has risen! \\ud83e\\ude78\",\"color\":\"dark_blue\"}");
                     new BukkitRunnable() {
                         @Override
                         public void run() {
@@ -603,8 +658,8 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
                 } else if (b == 7) {
                     if (a == 0) {
                         this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a times 20 140 40");
-                        this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83e\\ude78 The Blood Nether moon has risen! \\ud83e\\ude78\",\"color\":\"dark_blue\"}");
-                        int numbernether = r.nextInt(8) + 5;
+                        this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83e\\ude78 The nether blood moon has risen! \\ud83e\\ude78\",\"color\":\"dark_blue\"}");
+                        int numbernether = r.nextInt(11) + 5;
                         int nethertimer = 10000 / numbernether;
                         new BukkitRunnable() {
                             @Override
@@ -619,7 +674,7 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
                                 int z = loc.getBlockZ();
                                 Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon lightning_bolt " + x + " " + y + " " + z);
                                 Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "place structure minecraft:ruined_portal_nether " + x + " " + y + " " + z);
-                                int mobnum = r.nextInt(11) + 5;
+                                int mobnum = r.nextInt(8) + 5;
                                 int mobid = r.nextInt(12);
                                 while (mobnum != 0) {
                                     mobnum = mobnum - 1;
@@ -651,8 +706,8 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
                         return;
                     }
                     this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a times 20 140 40");
-                    this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83e\\ude78 The Nether moon has risen! \\ud83e\\ude78\",\"color\":\"dark_blue\"}");
-                    int numbernether = r.nextInt(8) + 5;
+                    this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83e\\ude78 The nether moon has risen! \\ud83e\\ude78\",\"color\":\"dark_blue\"}");
+                    int numbernether = r.nextInt(11) + 5;
                     int nethertimer = 10000 / numbernether;
                     new BukkitRunnable() {
                         @Override
@@ -666,7 +721,7 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
                             int y = loc.getBlockY();
                             int z = loc.getBlockZ();
                             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon lightning_bolt " + x + " " + y + " " + z);
-                            int mobnum = r.nextInt(11) + 5;
+                            int mobnum = r.nextInt(8) + 5;
                             int mobid = r.nextInt(12);
                             while (mobnum != 0) {
                                 mobnum = mobnum - 1;
@@ -704,7 +759,7 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
                 } else if (b == 8) {
                     if (a == 0) {
                         this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a times 20 140 40");
-                        this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83e\\ude78 The Blood Party moon has risen! \\ud83e\\ude78\",\"color\":\"dark_blue\"}");
+                        this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83e\\ude78 The party blood moon has risen! \\ud83e\\ude78\",\"color\":\"dark_blue\"}");
                         new BukkitRunnable() {
                             @Override
                             public void run() {
@@ -727,12 +782,12 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
 
 
                             }
-                        }.runTaskTimer(plugin, 0L, r.nextInt( 101) + 20);
+                        }.runTaskTimer(plugin, 0L, r.nextInt( 41) + 20);
                         return;
                     }
 
                     this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a times 20 140 40");
-                    this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83e\\ude78 The Party moon has risen! \\ud83e\\ude78\",\"color\":\"dark_blue\"}");
+                    this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83e\\ude78 The party moon has risen! \\ud83e\\ude78\",\"color\":\"dark_blue\"}");
                     new BukkitRunnable() {
                         @Override
                         public void run() {
@@ -750,15 +805,20 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
 
 
                         }
-                    }.runTaskTimer(plugin, 0L, r.nextInt(51) + 20);
+                    }.runTaskTimer(plugin, 0L, r.nextInt(41) + 20);
                     return;
                 } else if (b == 9) {
+                    presidentId = null;
+                    assassinId = null;
+                    bodyguards.clear();
+                    diedTonight.clear();
+                    electionActive = false;
                     votedFor.clear();
                     voteCounts.clear();
                     assassinRewarded = false;
 
                     this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a times 20 140 40");
-                    this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83e\\ude78 The Democratic moon has risen! \\ud83e\\ude78\",\"color\":\"dark_blue\"}");
+                    this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title {\"text\":\"\\ud83e\\ude78 The regicide moon has risen! \\ud83e\\ude78\",\"color\":\"dark_blue\"}");
                     Bukkit.broadcastMessage("§6Voting closes in 1 minute!");
                     Bukkit.getScheduler().runTaskLater(this, () -> {
                         UUID winner = null;
@@ -783,6 +843,10 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
                             if (president != null) {
                                 president.sendMessage("§6Welcome President! You now have 1 minute to decide 2 non-reds to be your bodyguards (/hire). Failure to do so will result in the loss of your life. Once they are picked, a random player will become an assassin. This player will have the task to kill you. If they kill you, you lose that life and your bodyguards will also each lose a life if they didn't die. If you survive the night, you shall gain rewards and the assassin shall lose a life. Good luck President.");
                             }
+                        }
+                        if (presidentId == null) {
+                            Bukkit.broadcastMessage("§cNobody voted, so there is no president tonight.");
+                            return;
                         }
                         electionActive = true;
 
@@ -829,29 +893,24 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
                     electionActive = false;
                     Bukkit.broadcastMessage("§aThe president survived the night!");
                     tell(presidentId, "§6You survived! Here is your reward.");
-
-
                     Player p = Bukkit.getPlayer(presidentId);
-                    giveAssassinReward(p);
-                    // reward
-
+                    if (p != null) giveAssassinReward(p);
+                    assassinRewarded = true; // stops the penalty below running twice
                     if (assassinId != null) {
                         String aName = Bukkit.getOfflinePlayer(assassinId).getName();
                         if (aName != null && !isRed(aName)) loseLife(aName);
                     }
                 }
-
                 if (assassinId != null && !assassinRewarded) {
                     String aName = Bukkit.getOfflinePlayer(assassinId).getName();
                     if (aName != null && !isRed(aName)) loseLife(aName);
                 }
 
-                world.setMonsterSpawnLimit(70);
-                world.setTicksPerMonsterSpawns(1);
-                world.setAnimalSpawnLimit(10);
-                world.setWaterAnimalSpawnLimit(5);
-                handledPlayers.clear();
+                assassinId = null;
 
+
+                handledPlayers.clear();
+                for (Player p : Bukkit.getOnlinePlayers()) p.resetPlayerTime();
                 this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "effect clear @e");
                 this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "gamerule random_tick_speed 3");
 
@@ -1007,11 +1066,93 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
             sender.sendMessage("§eElection active: §f" + electionActive);
             return true;
         }
-    return true;
+        if (command.getName().equalsIgnoreCase("Boogeyroll")) {
+            if (!sender.hasPermission("boogeyroll.use")) {
+                sender.sendMessage("§cYou don't have permission to use this command!");
+                return true;
+            } else {
+                this.getServer().broadcastMessage("§6§lA Boogeyman will be selected in §e§l1 minute§6§l!");
+                this.getServer().getScheduler().runTaskLater(this, () -> {
+                    this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title [{\"text\":\"3\",\"bold\":true,\"color\":\"dark_green\"}]");
+                    this.getServer().getScheduler().runTaskLater(this, () -> {
+                        this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title [{\"text\":\"2\",\"bold\":true,\"color\":\"yellow\"}]");
+                        this.getServer().getScheduler().runTaskLater(this, () -> {
+                            this.getServer().dispatchCommand(this.getServer().getConsoleSender(), "title @a title [{\"text\":\"1\",\"bold\":true,\"color\":\"dark_red\"}]");
+                            this.getServer().getScheduler().runTaskLater(this, () -> {
+                                List<Player> eligiblePlayers = new ArrayList<>();
+
+                                for (Player player : this.getServer().getOnlinePlayers()) {
+                                    Team team = player.getScoreboard().getPlayerTeam(player);
+                                    if (team != null && !team.getName().equalsIgnoreCase("R")) {
+                                        eligiblePlayers.add(player);
+                                    }
+                                }
+
+                                if (eligiblePlayers.isEmpty()) {
+                                    this.getServer().broadcastMessage("§cNo eligible players for boogeyman!");
+                                } else {
+                                    Random random = new Random();
+                                    Collections.shuffle(eligiblePlayers, random);
+
+                                    // 1-3 boogeymen, but never more than the eligible players available
+                                    int count = Math.min(random.nextInt(3) + 1, eligiblePlayers.size());
+                                    List<Player> chosen = new ArrayList<>(eligiblePlayers.subList(0, count));
+
+                                    Map<String, Integer> boogeymen = new LinkedHashMap<>();
+                                    for (Player boogeyman : chosen) {
+                                        boogeymen.put(boogeyman.getName(), 0); // 0 = hasn't killed yet
+                                        boogeyman.sendTitle("§4You are the Boogeyman!", "§cKill someone to lift the curse", 10, 70, 20);
+                                    }
+
+                                    for (Player player : Bukkit.getOnlinePlayers()) {
+                                        if (!chosen.contains(player)) {
+                                            player.sendTitle("§2You are NOT the Boogeyman!", "§aSurvive against the Boogeyman!", 10, 70, 20);
+                                        }
+                                    }
+
+                                    this.writeBoogeymen(boogeymen);
+                                }
+                            }, 50L);
+                        }, 50L);
+                    }, 50L);
+                }, 1200L);
+                return true;
+            }
+        } else if (command.getName().equalsIgnoreCase("amiboogeyman")) {
+            Integer status = readBoogeymen().get(sender.getName());
+            if (status == null) {
+                sender.sendMessage("You are NOT the Boogeyman!");
+            } else if (status == 1) {
+                sender.sendMessage("You were a Boogeyman, but you already got your kill. You are cured!");
+            } else {
+                sender.sendMessage("You are the Boogeyman!");
+                sender.sendMessage("You need to kill someone who isn't a red to be cured!");
+            }
+            return true;
+        }
+        return true;
     }
-    @Override
-    public void onDisable() {
+
+    public void saveBoogeymanToFile(String boogeymanName) {
+        try {
+            File dataFolder = this.getDataFolder();
+            if (!dataFolder.exists()) {
+                dataFolder.mkdirs();
+            }
+
+            File boogeymanFile = new File(dataFolder, "boogeyman.txt");
+            FileWriter writer = new FileWriter(boogeymanFile);
+            PrintWriter printer = new PrintWriter(writer);
+            printer.println(boogeymanName);
+            printer.println(System.currentTimeMillis());
+            printer.close();
+            this.getLogger().info("Boogeyman saved to file: " + boogeymanName);
+        } catch (IOException e) {
+            this.getLogger().warning("Could not save boogeyman to file: " + e.getMessage());
+        }
+
     }
+
     public double getCurrentBorderSize() {
         World world = (World)this.getServer().getWorlds().get(0);
         return world.getWorldBorder().getSize();
@@ -1170,7 +1311,7 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
             if (f == 0) {
                 Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item " + assx + " " + assy + " " + assz + " {Item:{id:\"minecraft:trident\",count:1}}");
             } else if (f == 1) {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item " + assx + " " + assy + " " + assz + " Item:{id:\"minecraft:ender_pearl\",count:8}}");
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item " + assx + " " + assy + " " + assz + " {Item:{id:\"minecraft:ender_pearl\",count:8}}");
             } else if (f == 2) {
                 Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:item " + assx + " " + assy + " " + assz + " {Item:{id:\"minecraft:breeze_rod\",count:12}}");
             } else if (f == 3) {
@@ -1224,11 +1365,30 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
         return " §a(online)";
     }
 
+    private static final int MOON_LOOP = 10; // must match daysLoop in the pack
+
+    private void applyMoonPhase(Player p, int moonType) {
+        World overworld = Bukkit.getWorlds().get(0);
+        int currentSlot = (int) ((overworld.getFullTime() / 24000L) % MOON_LOOP);
+        long offsetDays = (moonType - currentSlot + MOON_LOOP) % MOON_LOOP;
+        p.setPlayerTime(offsetDays * 24000L, true);
+    }
+
 
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) throws InterruptedException {
         Player player = event.getEntity();
         Team team = player.getScoreboard().getEntryTeam(player.getName());
+        Player killerPlayer = player.getKiller();
+        if (killerPlayer != null) {
+            Map<String, Integer> boogeymen = readBoogeymen();
+            Integer status = boogeymen.get(killerPlayer.getName());
+            if (status != null && status == 0) {
+                boogeymen.put(killerPlayer.getName(), 1); // got their kill
+                writeBoogeymen(boogeymen);
+                killerPlayer.sendMessage(new String[]{"§a§lCURSE LIFTED!", "§eYou are no longer the boogeyman"});
+            }
+        }
         if (team == null) {
             // admin.sendMessage("Yo, you fucked up somewhere, that person that died isn't on a team! " + player.getName());
         } else {

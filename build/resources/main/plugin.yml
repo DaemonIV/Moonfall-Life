@@ -22,3 +22,12 @@ commands:
     description: Show the president, bodyguards and assassin
     usage: /election
     permission: bloodmoonlife.admin
+
+  boogeyroll:
+    description: Funky boogey
+    usage: /election
+    permission: bloodmoonlife.admin
+
+  amiboogeyman:
+    description: are you boogey?
+    usage: /amiboogeyman
