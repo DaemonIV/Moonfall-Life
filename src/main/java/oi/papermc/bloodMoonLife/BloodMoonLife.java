@@ -689,7 +689,7 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
                                         } else if (buff == 2) {
                                             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "effect give " + player.getName() + " weaving infinite 1 true");
                                             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "effect give " + player.getName() + " oozing infinite 1 true");
-                                            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "effect give " + player.getName() + " infestation infinite 1 true");
+                                            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "effect give " + player.getName() + " mining_fatigue infinite 0 true");
                                         }
                                     }
                                 }
