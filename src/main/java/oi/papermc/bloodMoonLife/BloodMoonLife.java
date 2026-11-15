@@ -328,7 +328,7 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
                     }.runTaskTimer(plugin, 0L, mobtimer);
                     return;
 
-
+                //berserker
                 } else if (b == 2) {
                     Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "playsound minecraft:block.note_block.chime master @a ~ ~ ~ 100 0.7 1");
                     if (a == 0) {
@@ -350,8 +350,8 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
                                     this.cancel();
                                     return;
                                 }
-                                plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), "effect give @e[type=!minecraft:player] minecraft:strength infinite 1 true");
-                                plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), "effect give @e[type=!minecraft:player] minecraft:speed infinite 3 true");
+                                plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), "effect give @e[type=!minecraft:player,type=!minecraft:creeper] minecraft:strength infinite 1 true");
+                                plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), "effect give @e[type=!minecraft:player,type=!minecraft:creeper] minecraft:speed infinite 3 true");
                             }
                         }.runTaskTimer(plugin, 0L, 20L);
                         return;
@@ -872,7 +872,7 @@ public final class BloodMoonLife extends JavaPlugin implements Listener {
                                     Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon minecraft:firework_rocket " + x + " " + y + " " + z + " {LifeTime:20,FireworksItem:{id:\"minecraft:firework_rocket\",count:1,components:{\"fireworks\":{explosions:[{shape:\"star\",colors:[I;11743532,4312372,14188952,6719955,2437522,8073150,12801229,3887386,15435844],fade_colors:[I;15790320],has_trail:1b}],flight_duration:3b}}}}");
                                     if (r.nextInt(5) == 0) {
                                         Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                                            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon tnt_minecart " + x + " " + (y + 9) + " " + z);
+                                            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "summon tnt " + x + " " + (y + 9) + " " + z);
                                         }, 20L);
                                     }
     
